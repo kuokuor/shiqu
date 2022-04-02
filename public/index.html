@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <style lang="scss">
+      *{
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      const width = document.documentElement.clientWidth || document.body.clientWidth; // 真机宽度
+      const ratio = width / 375; // 真机 与 开发所用机型 的宽度比例
+      const fontSize = 100 * ratio; // 100为开发时根标签（html）的字体大小
+      document.getElementsByTagName('html')[0].style['font-size'] = fontSize + 'px'; // 真机根标签字体大小
+    </script>
   </head>
   <body>
     <noscript>
