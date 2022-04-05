@@ -1,0 +1,16 @@
+// 实现文字超出的部分用省略号代替的效果
+@mixin ellipsis {
+  white-space: nowrap;  //限制一行内显示文本
+  overflow: hidden;     //隐藏超出的部分
+  text-overflow: ellipsis;  //超出的部分用省略号替代
+}
+
+@mixin two-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  overflow:hidden;
+  /*! autoprefixer: off */
+  -webkit-box-orient: vertical;
+}

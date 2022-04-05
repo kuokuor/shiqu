@@ -62,7 +62,7 @@
             </el-button>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="registerSubmit(registerFormRef)" class="button">登录</el-button>
+            <el-button type="primary" @click="registerSubmit(registerFormRef)" class="button">注册</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -530,69 +530,69 @@ export default {
   }
 
   // 取消elementUI输入框组件自带高度和阴影
-  ::v-deep .el-input__inner{
+  :deep(.el-input__inner){
     height: inherit;
     line-height: inherit;
     box-shadow: none;
     border-radius: 0;
     border-bottom: .01rem solid $content-bgColor;
   }
-  ::v-deep .el-input__inner:focus{
+  :deep(.el-input__inner:focus){
     border-bottom: .01rem solid #75a297;
   }
-  ::v-deep .el-form-item.is-error .el-input__inner{
+  :deep(.el-form-item.is-error .el-input__inner){
     height: inherit;
     line-height: inherit;
     box-shadow: none;
     border-bottom: .01rem solid var(--el-color-danger);
   }
   // 修改elementUI输入框组件验证失败提示的样式
-  ::v-deep .el-form-item__error{
+  :deep(.el-form-item__error){
     font-size: .12rem;
     top: .3rem;
   }
   // 清除输入框组件自带mb
-  ::v-deep .el-form-item{
+  :deep(.el-form-item){
     margin-bottom: 0;
   }
   // 修改表单组件自带布局
-  ::v-deep .el-form-item__content{
+  :deep(.el-form-item__content){
     flex-wrap: nowrap;
     align-items: stretch;
   }
   // 修改多选框组件自带样式
-  ::v-deep .el-checkbox{
+  :deep(.el-checkbox){
     color: $titleColor;
     height: .12rem;
   }
-  ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner{
+  :deep(.el-checkbox__input.is-checked .el-checkbox__inner){
     background-color: #75a297;
     border-color: #75a297;
   }
-  ::v-deep .el-checkbox__input.is-focus .el-checkbox__inner{
+  :deep(.el-checkbox__input.is-focus .el-checkbox__inner){
     border-color: #75a297;
   }
-  ::v-deep .el-checkbox__inner{
+  :deep(.el-checkbox__inner){
     width: .12rem;
     height: .12rem;
   }
-  ::v-deep .el-checkbox__inner::after{
+  :deep(.el-checkbox__inner::after){
     width: .04rem;
     height: .08rem;
     top: -.01rem;
     left: .02rem;
   }
-  ::v-deep .el-checkbox__inner:hover{
+  :deep(.el-checkbox__inner:hover){
     border-color: #75a297;
   }
-  ::v-deep .el-checkbox__label{
+  :deep(.el-checkbox__label){
     font-size: .12rem;
     padding-left: .08rem;
   }
-  ::v-deep .el-checkbox__input.is-checked+.el-checkbox__label{
+  :deep(.el-checkbox__input.is-checked+.el-checkbox__label){
     color: #75a297;
   }
-  ::v-deep .el-button{
+  :deep(.el-button){
     width: .6rem;
     height: .28rem;
     font-size: .12rem;
