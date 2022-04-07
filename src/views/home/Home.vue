@@ -5,29 +5,31 @@
       <a class="iconfont classify__icon">&#xe649;</a>
     </div>
     <ul class="nav">
+      <li class="nav__item" @click="handleTabClick(0)">
+        <a :class="{'nav-link': true, 'active': activeIndex === 0}" :tab="activeIndex">关注</a>
+        <div :class="{'line': activeIndex === 0}"></div>
+      </li>
       <li class="nav__item" @click="handleTabClick(1)">
-        <a :class="{'nav-link': true, 'active': activeIndex === 1}" :tab="activeIndex">关注</a>
+        <a :class="{'nav-link': true, 'active': activeIndex === 1}" :tab="activeIndex">热门</a>
         <div :class="{'line': activeIndex === 1}"></div>
       </li>
       <li class="nav__item" @click="handleTabClick(2)">
-        <a :class="{'nav-link': true, 'active': activeIndex === 2}" :tab="activeIndex">热门</a>
+        <a :class="{'nav-link': true, 'active': activeIndex === 2}" :tab="activeIndex">最新</a>
         <div :class="{'line': activeIndex === 2}"></div>
-      </li>
-      <li class="nav__item" @click="handleTabClick(3)">
-        <a :class="{'nav-link': true, 'active': activeIndex === 3}" :tab="activeIndex">最新</a>
-        <div :class="{'line': activeIndex === 3}"></div>
       </li>
     </ul>
     <div class="search">
       <a class="iconfont search__icon">&#xe802;</a>
     </div>
   </div>
-  <div class="main">
+  <div class="main" ref="mainDiv">
     <div class="wrapper">
-      <div v-for="item in noteList" :key="item.note.id" class="content__wrapper">
-        <contents :notes="item" />
+      <div v-for="item in noteList[activeIndex]" :key="item.note.id" class="content__wrapper">
+        <contents :notes="item" @changeLiked="changeLiked" />
       </div>
     </div>
+    <load-more v-if="loadMore" />
+    <div class="noMore" v-if="!loadMore">哎呀 已经到底啦~</div>
   </div>
   <docker :currentIndex="1" />
 </template>
@@ -35,60 +37,62 @@
 <script>
 import Loading from '../../components/Loading.vue'
 import Contents from './Contents.vue'
+import LoadMore from '../../components/loadMore.vue'
 import Docker from '../../components/Docker.vue'
 import { ref, onMounted } from 'vue'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 
-export default {
-  name: 'Home',
-  components: {
-    Loading,
-    Contents,
-    Docker
-  },
-  setup () {
-    const load = ref(true)
-    const activeIndex = ref(2)
-    onMounted(() => {
-      if (load.value) {
-        getNoteList() // 加载数据
-      }
-    })
-    const handleTabClick = (index) => {
-      activeIndex.value = index
+const useTabEffect = (load, activeIndex, noteList) => {
+  // 模块切换逻辑
+  const handleTabClick = (index) => {
+    if (!noteList.value[index].length || activeIndex.value === index) {
+      load.value = true
+      getNoteList(index, true) // 已经在index对应模块下了，重新获取数据(刷新)
+      // 返回顶部
+      const mainDiv = document.getElementsByClassName('main')[0]
+      mainDiv.scrollTop = 0
     }
-    const noteList = ref([])
-    const getNoteList = async () => {
-      try {
-        const result = await get('/note/getNoteList')
-        if (result.code === 200 && result.data) {
-          const list = result.data
-          list.forEach((column) => {
-            const likeCount = column.note.likeCount
-            if (likeCount / 10000 >= 1) {
-              let format = (likeCount / 10000).toFixed(1)
-              if (format > 10) {
-                format = parseInt(format)
-              }
-              column.note.likeCount = `${format}万`
+    activeIndex.value = index
+  }
+
+  const startCount = ref(0)
+  const noMore = ref(false)
+  // 获取笔记列表
+  const getNoteList = async (index, refresh) => {
+    try {
+      const result = await get('/note/getNoteList', {
+        activeIndex: index,
+        limit: 10,
+        offset: startCount
+      })
+      if (result.code === 200 && result.data) {
+        const list = result.data
+        list.forEach((column) => {
+          const likeCount = column.note.likeCount
+          if (likeCount / 10000 >= 1) {
+            let format = (likeCount / 10000).toFixed(1)
+            if (format > 10) {
+              format = parseInt(format)
             }
-          })
-          noteList.value.push(...list)
-          console.log(noteList.value)
+            column.note.likeCount = `${format}万`
+          }
+        })
+        // 刷新笔记列表
+        if (refresh) {
+          noteList.value[index] = [...list]
           setTimeout(() => {
             load.value = false // 获取数据成功，关闭loading效果
           }, 1000)
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
+        } else { // 不刷新，加载更多笔记
+          noteList.value[index].push(...list)
+          // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
+          if (list.length < 10) {
+            noMore.value = true
+          }
+          startCount.value += list.length
         }
-      } catch (e) {
+      } else {
         ElMessage({
           showClose: true,
           message: '发生错误',
@@ -97,13 +101,83 @@ export default {
           duration: 1000
         })
       }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
     }
+  }
+  return {
+    handleTabClick,
+    noMore,
+    getNoteList
+  }
+}
+
+export default {
+  name: 'Home',
+  components: {
+    Loading,
+    Contents,
+    LoadMore,
+    Docker
+  },
+  setup () {
+    const load = ref(true) // 控制loading展示与否
+    const activeIndex = ref(1) // 被选中的模块
+    const noteList = ref([[], [], []]) // 存放关注、热门、最新的笔记列表
+    const { handleTabClick, noMore, getNoteList } = useTabEffect(load, activeIndex, noteList)
+
+    onMounted(() => {
+      if (load.value) {
+        getNoteList(1, true) // 进入首页，自动加载热门笔记
+      }
+      mainDiv.value.addEventListener('scroll', scrollToBottom)
+    })
+
+    // 点赞与取消
+    const changeLiked = (id, liked, count) => {
+      noteList.value[activeIndex.value] = noteList.value[activeIndex.value].map((noteData) => {
+        if (noteData.note.id === id) {
+          noteData.note.liked = liked
+          if (typeof noteData.note.likeCount === 'number') {
+            noteData.note.likeCount += count
+          }
+        }
+        return noteData
+      })
+    }
+
+    const loadMore = ref(false)
+    const mainDiv = ref(null)
+    const scrollToBottom = () => {
+      const scrollTop = mainDiv.value.scrollTop
+      const scrollHeight = mainDiv.value.firstChild.scrollHeight
+      const clientHeight = mainDiv.value.clientHeight
+      if (scrollTop + clientHeight >= scrollHeight - 1) {
+        if (!noMore.value) {
+          loadMore.value = true
+          getNoteList(activeIndex.value, false) // 加载更多笔记
+        } else {
+          // 没有更多数据了
+          loadMore.value = false
+        }
+      }
+    }
+
     return {
       load,
       activeIndex,
       handleTabClick,
       noteList,
-      getNoteList
+      getNoteList,
+      changeLiked,
+      loadMore,
+      mainDiv
     }
   }
 }
@@ -190,5 +264,11 @@ export default {
     top: .5rem;
     height: calc(100vh - 1rem);
     overflow: auto;
+    background: $content-bgColor;
+  }
+  .noMore{
+    width: 100%;
+    height: .4rem;
+    line-height: .4rem;
   }
 </style>

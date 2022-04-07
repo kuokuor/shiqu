@@ -44,7 +44,7 @@ export default {
       height: 100%;
       background-color: #a08fd5;
       /* 执行动画：动画名 时长 贝塞尔曲线 无限次播放 */
-      animation: spinner 2.5s cubic-bezier(0.75,0,0.5,1) infinite;
+      animation: spinner 2s cubic-bezier(0.75,0,0.5,1) infinite;
     };
     /* 投影 */
     .spinner::after{
@@ -53,7 +53,7 @@ export default {
       border-radius: 50%;
       background-color: #333;
       bottom: -.3rem;
-      animation: shadow 2.5s cubic-bezier(0.75,0,0.5,1) infinite;
+      animation: shadow 2s cubic-bezier(0.75,0,0.5,1) infinite;
     };
     /* loading文字 */
     .text{
@@ -65,7 +65,7 @@ export default {
       font-size: .16rem;
       text-transform: uppercase;
       font-weight: 100;
-      animation: text 2.5s cubic-bezier(0.75,0,0.5,1) infinite;
+      animation: text 2s cubic-bezier(0.75,0,0.5,1) infinite;
     }
   }
 

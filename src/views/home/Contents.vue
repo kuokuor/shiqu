@@ -1,5 +1,5 @@
 <template>
-  <el-card>
+  <el-card shadow="never">
     <img
       :src="notes.note.images[0]"
       class="image"
@@ -15,12 +15,12 @@
         </div>
         <div class="like">
           <span
-            :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': hasLike}"
+            :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': notes.note.liked}"
             v-html="icon"
             @click="handleLikeClick(notes.note.id, notes.note.liked)"
           >
           </span>
-          <span class="like__count">{{likeCount}}</span>
+          <span class="like__count">{{notes.note.likeCount}}</span>
         </div>
       </div>
     </div>
@@ -32,38 +32,23 @@ import { ref } from 'vue'
 import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 
-export default {
-  name: 'Contents',
-  props: ['notes'],
-  setup (props) {
-    const icon = ref('&#xe6a9;')
-    const hasLike = ref(props.notes.note.liked)
-    const likeCount = ref(props.notes.note.likeCount)
-    if (hasLike.value) {
+// 点赞及取消逻辑
+const useLikeEffect = (icon, emit) => {
+  // 处理点击点赞图标的事件
+  const handleLikeClick = async (noteId, liked) => {
+    if (!liked) {
+      liked = true
       icon.value = '&#xe6aa;'
+      emit('changeLiked', noteId, true, 1)
+    } else {
+      liked = false
+      icon.value = '&#xe6a9;'
+      emit('changeLiked', noteId, false, -1)
     }
-    const handleLikeClick = async (noteId) => {
-      if (!hasLike.value) {
-        hasLike.value = true
-        likeCount.value++
-        icon.value = '&#xe6aa;'
-      } else {
-        hasLike.value = false
-        likeCount.value--
-        icon.value = '&#xe6a9;'
-      }
-      try {
-        const result = await post('/note/changeLiked', { noteId: noteId })
-        if (result.code !== 200) {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
+    try {
+      // 发送修改点赞状态的请求
+      const result = await post('/note/changeLiked', { noteId: noteId })
+      if (result.code !== 200) {
         ElMessage({
           showClose: true,
           message: '发生错误',
@@ -72,11 +57,30 @@ export default {
           duration: 1000
         })
       }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
     }
+  }
+  return {
+    handleLikeClick
+  }
+}
+
+export default {
+  name: 'Contents',
+  props: ['notes'],
+  setup (props, context) {
+    const icon = props.notes.note.liked ? ref('&#xe6aa;') : ref('&#xe6a9;')
+    const { emit } = context
+    const { handleLikeClick } = useLikeEffect(icon, emit)
     return {
       icon,
-      hasLike,
-      likeCount,
       handleLikeClick
     }
   }
@@ -86,6 +90,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../style/viriables.scss';
 @import '../../style/mixins.scss';
+
   :deep(.el-card__body){
     padding: 0;
   }
