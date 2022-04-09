@@ -18,7 +18,19 @@
   </div>
   <div class="main">
     <div class="detail">
-      <div class="imgGroup"></div>
+      <div class="imgGroup">
+        <swiper
+          class="swiper"
+          :modules="modules"
+          :slides-per-view="1"
+          pagination
+          ref="mySwiper"
+        >
+          <swiper-slide class="image__wrapper" v-for="(item, index) in noteDetail.images" :key="index">
+            <img  class="image" :src="item">
+          </swiper-slide>
+        </swiper>
+      </div>
       <div class="text">
         <div class="title">{{noteDetail.note?.title}}</div>
         <p class="content">{{noteDetail.note?.content}}</p>
@@ -70,11 +82,22 @@ import { ElMessage } from 'element-plus'
 import Loading from '../../components/Loading.vue'
 import Comment from '../../components/Comment.vue'
 
+import { Navigation, Pagination, Scrollbar, A11y } from 'swiper'
+
+import { Swiper, SwiperSlide } from 'swiper/vue/swiper-vue.js'
+
+import 'swiper/swiper.min.css'
+import 'swiper/modules/navigation/navigation.min.css'
+import 'swiper/modules/pagination/pagination.min.css'
+import 'swiper/modules/scrollbar/scrollbar.min.css'
+
 export default {
   name: 'NoteDetail',
   components: {
     Loading,
-    Comment
+    Comment,
+    Swiper,
+    SwiperSlide
   },
   setup () {
     const load = ref(true)
@@ -83,8 +106,10 @@ export default {
     const buttonType = ref('primary')
     const followButtonText = ref('+关注')
 
+    const mySwiper = ref(null)
+
     const likedIcon = ref('&#xe6a9;')
-    const collectedIcon = ref('&#xe624;')
+    const collectedIcon = ref('&#xe605;')
 
     const noteDetail = ref({})
     const route = useRoute()
@@ -132,7 +157,7 @@ export default {
           }
           // 初始化收藏图标状态
           if (noteDetail.value.note.collected) {
-            collectedIcon.value = '&#xe674;'
+            collectedIcon.value = '&#xe64d;'
           }
           setTimeout(() => {
             load.value = false
@@ -236,13 +261,13 @@ export default {
     // 对笔记进行收藏取消
     const handleCollectClick = async (collected) => {
       if (!collected) {
-        collectedIcon.value = '&#xe674;'
+        collectedIcon.value = '&#xe64d;'
         noteDetail.value.note.collected = true
         if (typeof noteDetail.value.note.collectCount === 'number') {
           ++noteDetail.value.note.collectCount
         }
       } else {
-        collectedIcon.value = '&#xe624;'
+        collectedIcon.value = '&#xe605;'
         noteDetail.value.note.collected = false
         if (typeof noteDetail.value.note.collectCount === 'number') {
           --noteDetail.value.note.collectCount
@@ -308,6 +333,8 @@ export default {
     return {
       load,
       handleBackClick,
+      mySwiper,
+      modules: [Navigation, Pagination, Scrollbar, A11y],
       buttonType,
       followButtonText,
       likedIcon,
@@ -381,6 +408,22 @@ export default {
       border-bottom: .01rem solid $content-bgColor;
       .imgGroup{
         height: calc(4 / 3 * 100vw);
+        .swiper{
+          height: 100%;
+          .image__wrapper{
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .image{
+              width: 100%;
+              z-index: 1;
+            }
+          }
+          :deep(.swiper-pagination){
+            z-index: 2;
+          }
+        }
       }
       .text{
         padding: 0 .12rem;
@@ -450,7 +493,7 @@ export default {
       display: flex;
       align-items: center;
       &__icon{
-        font-size: .19rem;
+        font-size: .22rem;
         color: $weakColor;
         &--active{
           color: #ffa500;
