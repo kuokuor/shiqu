@@ -21,7 +21,7 @@ export default createStore({
       //  },
       //  author: {
       //    id: '',
-      //    nickName: '',
+      //    nickname: '',
       //    avatar: '',
       //    followCount: 99,
       //    followed: false

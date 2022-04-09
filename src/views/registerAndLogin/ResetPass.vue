@@ -213,7 +213,8 @@ const useSubmitEffect = (resetForm) => {
         try {
           const resetData = reactive({
             email: resetForm.email,
-            password: resetForm.password
+            password: resetForm.password,
+            code: resetForm.code
           })
           const result = await post('/user/resetPass', resetData)
           if (result.code === 200) {
@@ -290,8 +291,15 @@ export default {
   .container{
     width: 100vw;
     min-height: 100vh;
+    padding: 0;
     background: url('../../assets/bg-image.jpg') no-repeat;
     background-size: cover;
+    .back__icon{
+      position: absolute;
+      top: .08rem;
+      left: .16rem;
+      color: $bgColor;
+    }
     .card__wrapper{
       position: absolute;
       top: 50%;
