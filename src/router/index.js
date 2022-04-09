@@ -4,7 +4,10 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import(/* webpackChunkName: "home" */ '../views/home/Home.vue')
+    component: () => import(/* webpackChunkName: "home" */ '../views/home/Home.vue'),
+    meta: {
+      keepAlive: true // 需要缓存
+    }
   },
   {
     path: '/registerAndLogin',
@@ -12,15 +15,26 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "registerAndLogin" */ '../views/registerAndLogin/RegisterAndLogin.vue')
+    component: () => import(/* webpackChunkName: "registerAndLogin" */ '../views/registerAndLogin/RegisterAndLogin.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
   },
   {
     path: '/resetPass',
     name: 'ResetPass',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "resetPass" */ '../views/registerAndLogin/ResetPass.vue')
+    component: () => import(/* webpackChunkName: "resetPass" */ '../views/registerAndLogin/ResetPass.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  {
+    path: '/noteDetail/:id',
+    name: 'NoteDetail',
+    component: () => import(/* webpackChunkName: "noteDetail" */ '../views/noteDetail/NoteDetail.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
   }
 ]
 

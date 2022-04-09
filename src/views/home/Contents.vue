@@ -1,7 +1,7 @@
 <template>
   <el-card shadow="never">
     <img
-      :src="notes.note.images[0]"
+      :src="notes.images[0]"
       class="image"
     />
     <div class="message">
@@ -11,7 +11,7 @@
           <div class="avatar">
             <el-avatar style="--el-avatar-size: .22rem" :src="notes.author.avatar" />
           </div>
-          <span class="nickName">{{notes.author.nickName}}</span>
+          <span class="nickname">{{notes.author.nickname}}</span>
         </div>
         <div class="like">
           <span
@@ -122,7 +122,7 @@ export default {
         .avatar{
           width: .3rem;
         }
-        .nickName{
+        .nickname{
           //display: inline-block;
           color: $weakColor;
           @include ellipsis;

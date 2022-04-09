@@ -46,7 +46,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    height: .49rem;
+    height: .5rem;
     z-index: 2;
     background: $bgColor;
     border-top: .01rem solid $content-bgColor;

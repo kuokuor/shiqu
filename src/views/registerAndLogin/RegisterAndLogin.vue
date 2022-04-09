@@ -285,7 +285,8 @@ const useSubmitEffect = (refresh, registerForm, loginForm) => {
         try {
           const registerData = reactive({
             email: registerForm.email,
-            password: registerForm.password
+            password: registerForm.password,
+            code: registerForm.code
           })
           const result = await post('/user/register', registerData)
           if (result.code === 200) {
@@ -425,8 +426,15 @@ export default {
   .container{
     width: 100vw;
     min-height: 100vh;
+    padding: 0;
     background: url('../../assets/bg-image.jpg') no-repeat;
     background-size: cover;
+    .back__icon{
+      position: absolute;
+      top: .08rem;
+      left: .16rem;
+      color: $bgColor;
+    }
     .card__wrapper{
       position: absolute;
       top: 50%;
@@ -466,7 +474,7 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     width: 240%;
-    height: 3.8rem;
+    height: 4rem;
     border-radius: 50%;
     display: flex;
     justify-content: center;

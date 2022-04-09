@@ -1,6 +1,6 @@
 <template>
   <loading v-if="load" />
-  <div class="container">
+  <div class="header">
     <div class="classify">
       <a class="iconfont classify__icon">&#xe649;</a>
     </div>
@@ -24,9 +24,14 @@
   </div>
   <div class="main" ref="mainDiv">
     <div class="wrapper">
-      <div v-for="item in noteList[activeIndex]" :key="item.note.id" class="content__wrapper">
+      <router-link
+        v-for="item in noteList[activeIndex]"
+        :key="item.note.id"
+        class="content__wrapper"
+        :to="`/noteDetail/${item.note.id}`"
+      >
         <contents :notes="item" @changeLiked="changeLiked" />
-      </div>
+      </router-link>
     </div>
     <load-more v-if="loadMore" />
     <div class="noMore" v-if="!loadMore">哎呀 已经到底啦~</div>
@@ -73,7 +78,7 @@ const useTabEffect = (load, activeIndex, noteList) => {
           if (likeCount / 10000 >= 1) {
             let format = (likeCount / 10000).toFixed(1)
             if (format > 10) {
-              format = parseInt(format)
+              format = Math.floor(format)
             }
             column.note.likeCount = `${format}万`
           }
@@ -185,7 +190,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../style/viriables.scss';
-  .container{
+  .header{
     display: flex;
     width: 100%;
     height: .5rem;
@@ -258,6 +263,9 @@ export default {
   .content__wrapper{
     margin-bottom: .02rem;
     break-inside: avoid;
+  }
+  a{
+    text-decoration: none;
   }
   .main{
     position: relative;

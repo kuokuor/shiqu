@@ -1,5 +1,10 @@
 <template>
-  <router-view v-if="isRouterAlive"></router-view>
+  <router-view v-slot="{ Component }">
+    <keep-alive v-if="$route.meta.keepAlive">
+      <component :is="Component" />
+    </keep-alive>
+  </router-view>
+  <router-view v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
 </template>
 
 <script>
