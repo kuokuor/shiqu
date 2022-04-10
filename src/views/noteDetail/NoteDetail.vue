@@ -75,7 +75,7 @@
   </div>
   <div class="input__wrapper" v-show="inputting" ref="inputWrapperRef">
     <div class="comment__input">
-      <input ref="inputRef" placeholder="说亿点好听的~" />
+      <input v-model="inputValue" ref="inputRef" placeholder="说亿点好听的~" />
     </div>
     <span class="send" @click="handleSendClick">发送</span>
   </div>
@@ -100,6 +100,304 @@ import 'swiper/modules/navigation/navigation.min.css'
 import 'swiper/modules/pagination/pagination.min.css'
 import 'swiper/modules/scrollbar/scrollbar.min.css'
 
+const useInitDataEffect = (noteDetail) => {
+  const load = ref(true)
+
+  const buttonType = ref('primary') // 关注按钮样式
+  const followButtonText = ref('+关注') // 关注按钮文字
+
+  const likedIcon = ref('&#xe6a9;') // 点赞图标
+  const collectedIcon = ref('&#xe605;') // 收藏图标
+
+  const route = useRoute()
+  const getNoteDetail = async () => {
+    try {
+      const result = await get(`/getNoteDetail/${route.params.id}`)
+      if (result.code === 200 && result.data) {
+        const detail = result.data
+        console.log('笔记详情', detail)
+        const likeCount = detail.note.likeCount
+        if (likeCount / 10000 >= 1) {
+          let format = (likeCount / 10000).toFixed(1)
+          if (format > 10) {
+            format = Math.floor(format)
+          }
+          detail.note.likeCount = `${format}万`
+        }
+        const collectCount = detail.note.collectCount
+        if (collectCount / 10000 >= 1) {
+          let format = (collectCount / 10000).toFixed(1)
+          if (format > 10) {
+            format = Math.floor(format)
+          }
+          detail.note.collectCount = `${format}万`
+        }
+        detail.commentCount = 0
+        if (detail.comments) {
+          detail.commentCount += detail.comments.length
+          detail.comments.forEach(comment => {
+            if (comment.reply) {
+              detail.commentCount += comment.reply.length
+            }
+          })
+        }
+        noteDetail.value = detail
+        console.log('最终笔记详情', noteDetail.value)
+        // 初始化关注按钮状态
+        if (noteDetail.value.author.followed) {
+          buttonType.value = ''
+          followButtonText.value = '已关注'
+        }
+        // 初始化点赞图标状态
+        if (noteDetail.value.note.liked) {
+          likedIcon.value = '&#xe6aa;'
+        }
+        // 初始化收藏图标状态
+        if (noteDetail.value.note.collected) {
+          collectedIcon.value = '&#xe64d;'
+        }
+        setTimeout(() => {
+          load.value = false
+        }, 1000)
+      } else {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
+    }
+  }
+
+  return {
+    load,
+    buttonType,
+    followButtonText,
+    likedIcon,
+    collectedIcon,
+    getNoteDetail
+  }
+}
+
+const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
+  const handleFollowClick = async (followed) => {
+    try {
+      // 发送修改关注状态的请求
+      const result = await post('/author/changeFollowed', { noteId: noteDetail.value.author.id })
+      if (result.code === 200) {
+        if (!followed) {
+          buttonType.value = ''
+          followButtonText.value = '已关注'
+          noteDetail.value.author.followed = true
+        } else {
+          buttonType.value = 'primary'
+          followButtonText.value = '+关注'
+          noteDetail.value.author.followed = false
+        }
+      } else {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
+    }
+  }
+  return {
+    handleFollowClick
+  }
+}
+
+const useLikedEffect = (noteDetail, likedIcon) => {
+  // 对笔记进行点赞取消
+  const handleLikeClick = async (liked) => {
+    try {
+      // 发送修改点赞状态的请求
+      const result = await post('/note/changeLiked', { noteId: noteDetail.value.note.id })
+      if (result.code === 200) {
+        if (!liked) {
+          likedIcon.value = '&#xe6aa;'
+          noteDetail.value.note.liked = true
+          if (typeof noteDetail.value.note.likeCount === 'number') {
+            ++noteDetail.value.note.likeCount
+          }
+        } else {
+          likedIcon.value = '&#xe6a9;'
+          noteDetail.value.note.liked = false
+          if (typeof noteDetail.value.note.likeCount === 'number') {
+            --noteDetail.value.note.likeCount
+          }
+        }
+      } else {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
+    }
+  }
+  return {
+    handleLikeClick
+  }
+}
+
+const useCollectedEffect = (noteDetail, collectedIcon) => {
+  // 对笔记进行收藏取消
+  const handleCollectClick = async (collected) => {
+    try {
+      // 发送修改收藏状态的请求
+      const result = await post('/note/changeCollected', { noteId: noteDetail.value.note.id })
+      if (result.code === 200) {
+        if (!collected) {
+          collectedIcon.value = '&#xe64d;'
+          noteDetail.value.note.collected = true
+          if (typeof noteDetail.value.note.collectCount === 'number') {
+            ++noteDetail.value.note.collectCount
+          }
+        } else {
+          collectedIcon.value = '&#xe605;'
+          noteDetail.value.note.collected = false
+          if (typeof noteDetail.value.note.collectCount === 'number') {
+            --noteDetail.value.note.collectCount
+          }
+        }
+      } else {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
+    }
+  }
+  return {
+    handleCollectClick
+  }
+}
+
+const useCommentEffect = (noteDetail) => {
+  // 点击评论图标定位到评论区域
+  const handleCommentClick = () => {
+    const detailHeight = document.getElementsByClassName('detail')[0].offsetHeight
+    const mainDiv = document.getElementsByClassName('main')[0]
+    mainDiv.scrollTop = detailHeight
+  }
+
+  // 对评论或回复点赞取消
+  const changeCommentLiked = (contentUserId, replyId, liked, count) => {
+    noteDetail.value.comments = noteDetail.value.comments.map((comment) => {
+      if (comment.user.id === contentUserId) {
+        if (replyId) { // 对回复进行点赞取消操作
+          comment.reply = comment.reply.map((item) => {
+            if (item.id === replyId) {
+              item.liked = liked
+              if (typeof item.likeCount === 'number') {
+                item.likeCount += count
+              }
+            }
+            return item
+          })
+        } else { // 对评论进行点赞取消操作
+          comment.liked = liked
+          if (typeof comment.likeCount === 'number') {
+            comment.likeCount += count
+          }
+        }
+      }
+      return comment
+    })
+  }
+  return {
+    handleCommentClick,
+    changeCommentLiked
+  }
+}
+
+const useInputEffect = (noteDetail, inputting) => {
+  const inputRef = ref(null)
+  const handleInputComment = () => {
+    console.log('唤起输入框')
+    inputting.value = true
+    console.log('正在输入', inputting.value)
+    nextTick(() => {
+      inputRef.value.focus() // 输入框显示后，获取焦点
+    })
+    console.log('输入框Ref', inputRef.value)
+  }
+
+  // 发送评论
+  const inputValue = ref('')
+  const handleSendClick = async () => {
+    const result = await post('/note/sendComment')
+    if (result.code === 200) {
+      // 获取到发送的评论，以及我的信息
+      const myComment = {
+        user: {
+          id: '1',
+          nickname: '我的昵称',
+          avatar: ''
+        },
+        commentText: inputValue.value,
+        liked: false,
+        likeCount: 0,
+        commentTime: new Date()
+      }
+      noteDetail.value.comments.unshift(myComment) // 新增一条评论
+      noteDetail.value.commentCount++ // 评论总数增1
+      console.log('更新后的笔记详情', noteDetail.value)
+      inputValue.value = '' // 清空输入框内容
+      inputting.value = false // 发送完评论后收起输入框
+    }
+  }
+  return {
+    inputRef,
+    inputValue,
+    handleInputComment,
+    handleSendClick
+  }
+}
+
 export default {
   name: 'NoteDetail',
   components: {
@@ -109,88 +407,22 @@ export default {
     SwiperSlide
   },
   setup () {
-    const load = ref(true)
-    const inputting = ref(false)
     const { handleBackClick } = useBackRouterEffect()
 
-    const buttonType = ref('primary') // 关注按钮样式
-    const followButtonText = ref('+关注') // 关注按钮文字
+    const noteDetail = ref({}) // 笔记详情
+
+    const { load, buttonType, followButtonText, likedIcon, collectedIcon, getNoteDetail } = useInitDataEffect(noteDetail) // 数据初始化的逻辑
+
+    const { handleFollowClick } = useFollowedEffect(noteDetail, buttonType, followButtonText) // 关注及取消的逻辑
+
+    const { handleLikeClick } = useLikedEffect(noteDetail, likedIcon) // 点赞及取消的逻辑
+
+    const { handleCollectClick } = useCollectedEffect(noteDetail, collectedIcon) // 收藏及取消的逻辑
+
+    const { handleCommentClick, changeCommentLiked } = useCommentEffect(noteDetail) // 操作评论的逻辑
 
     const mySwiper = ref(null)
 
-    const likedIcon = ref('&#xe6a9;') // 点赞图标
-    const collectedIcon = ref('&#xe605;') // 收藏图标
-
-    const noteDetail = ref({}) // 笔记详情
-    const route = useRoute()
-    const getNoteDetail = async () => {
-      try {
-        const result = await get(`/getNoteDetail/${route.params.id}`)
-        if (result.code === 200 && result.data) {
-          const detail = result.data
-          console.log('笔记详情', detail)
-          const likeCount = detail.note.likeCount
-          if (likeCount / 10000 >= 1) {
-            let format = (likeCount / 10000).toFixed(1)
-            if (format > 10) {
-              format = Math.floor(format)
-            }
-            detail.note.likeCount = `${format}万`
-          }
-          const collectCount = detail.note.collectCount
-          if (collectCount / 10000 >= 1) {
-            let format = (collectCount / 10000).toFixed(1)
-            if (format > 10) {
-              format = Math.floor(format)
-            }
-            detail.note.collectCount = `${format}万`
-          }
-          detail.commentCount = 0
-          if (detail.comments) {
-            detail.commentCount += detail.comments.length
-            detail.comments.forEach(comment => {
-              if (comment.reply) {
-                detail.commentCount += comment.reply.length
-              }
-            })
-          }
-          noteDetail.value = detail
-          console.log('最终笔记详情', noteDetail.value)
-          // 初始化关注按钮状态
-          if (noteDetail.value.author.followed) {
-            buttonType.value = ''
-            followButtonText.value = '已关注'
-          }
-          // 初始化点赞图标状态
-          if (noteDetail.value.note.liked) {
-            likedIcon.value = '&#xe6aa;'
-          }
-          // 初始化收藏图标状态
-          if (noteDetail.value.note.collected) {
-            collectedIcon.value = '&#xe64d;'
-          }
-          setTimeout(() => {
-            load.value = false
-          }, 1000)
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
     onMounted(() => {
       getNoteDetail()
     })
@@ -201,149 +433,8 @@ export default {
       router.push(`/user/${userId}`)
     }
 
-    const handleFollowClick = async (followed) => {
-      try {
-        // 发送修改关注状态的请求
-        const result = await post('/author/changeFollowed', { noteId: noteDetail.value.author.id })
-        if (result.code === 200) {
-          if (!followed) {
-            buttonType.value = ''
-            followButtonText.value = '已关注'
-            noteDetail.value.author.followed = true
-          } else {
-            buttonType.value = 'primary'
-            followButtonText.value = '+关注'
-            noteDetail.value.author.followed = false
-          }
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
-    // 对笔记进行点赞取消
-    const handleLikeClick = async (liked) => {
-      try {
-        // 发送修改点赞状态的请求
-        const result = await post('/note/changeLiked', { noteId: noteDetail.value.note.id })
-        if (result.code === 200) {
-          if (!liked) {
-            likedIcon.value = '&#xe6aa;'
-            noteDetail.value.note.liked = true
-            if (typeof noteDetail.value.note.likeCount === 'number') {
-              ++noteDetail.value.note.likeCount
-            }
-          } else {
-            likedIcon.value = '&#xe6a9;'
-            noteDetail.value.note.liked = false
-            if (typeof noteDetail.value.note.likeCount === 'number') {
-              --noteDetail.value.note.likeCount
-            }
-          }
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
-    // 对笔记进行收藏取消
-    const handleCollectClick = async (collected) => {
-      try {
-        // 发送修改收藏状态的请求
-        const result = await post('/note/changeCollected', { noteId: noteDetail.value.note.id })
-        if (result.code === 200) {
-          if (!collected) {
-            collectedIcon.value = '&#xe64d;'
-            noteDetail.value.note.collected = true
-            if (typeof noteDetail.value.note.collectCount === 'number') {
-              ++noteDetail.value.note.collectCount
-            }
-          } else {
-            collectedIcon.value = '&#xe605;'
-            noteDetail.value.note.collected = false
-            if (typeof noteDetail.value.note.collectCount === 'number') {
-              --noteDetail.value.note.collectCount
-            }
-          }
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
-    const handleCommentClick = () => {
-      const detailHeight = document.getElementsByClassName('detail')[0].offsetHeight
-      const mainDiv = document.getElementsByClassName('main')[0]
-      mainDiv.scrollTop = detailHeight
-    }
-
-    // 对评论或回复点赞取消
-    const changeCommentLiked = (contentUserId, replyId, liked, count) => {
-      noteDetail.value.comments = noteDetail.value.comments.map((comment) => {
-        if (comment.user.id === contentUserId) {
-          if (replyId) { // 对回复进行点赞取消操作
-            comment.reply = comment.reply.map((item) => {
-              if (item.id === replyId) {
-                item.liked = liked
-                if (typeof item.likeCount === 'number') {
-                  item.likeCount += count
-                }
-              }
-              return item
-            })
-          } else { // 对评论进行点赞取消操作
-            comment.liked = liked
-            if (typeof comment.likeCount === 'number') {
-              comment.likeCount += count
-            }
-          }
-        }
-        return comment
-      })
-    }
-
+    const inputting = ref(false)
+    const { inputRef, inputValue, handleInputComment, handleSendClick } = useInputEffect(noteDetail, inputting)
     // 点击输入框外区域，收起输入框（逻辑有问题）
     const inputWrapperRef = ref(null)
     const { isOutside } = useClickOutside(inputWrapperRef)
@@ -354,40 +445,6 @@ export default {
         inputting.value = false
       }
     })
-
-    const inputRef = ref(null)
-    const handleInputComment = () => {
-      console.log('唤起输入框')
-      inputting.value = true
-      console.log('正在输入', inputting.value)
-      nextTick(() => {
-        inputRef.value.focus() // 输入框显示后，获取焦点
-      })
-      console.log('输入框Ref', inputRef.value)
-    }
-
-    // 发送评论
-    const handleSendClick = async () => {
-      const result = await post('/note/sendComment')
-      if (result.code === 200) {
-        // 发送的评论
-        const myComment = {
-          user: {
-            id: '1',
-            nickname: '我的昵称',
-            avatar: ''
-          },
-          commentText: '我的评论',
-          liked: false,
-          likeCount: 0,
-          commentTime: new Date()
-        }
-        noteDetail.value.comments.unshift(myComment) // 新增一条评论
-        noteDetail.value.commentCount++ // 评论总数增1
-        console.log('更新后的笔记详情', noteDetail.value)
-        inputting.value = false // 发送完评论后收起输入框
-      }
-    }
 
     return {
       load,
@@ -409,6 +466,7 @@ export default {
       inputWrapperRef,
       inputRef,
       handleInputComment,
+      inputValue,
       handleSendClick
     }
   }
