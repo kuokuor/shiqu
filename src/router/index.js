@@ -29,9 +29,17 @@ const routes = [
     }
   },
   {
-    path: '/noteDetail/:id',
+    path: '/noteDetail/:noteId',
     name: 'NoteDetail',
     component: () => import(/* webpackChunkName: "noteDetail" */ '../views/noteDetail/NoteDetail.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  {
+    path: '/user/:userId',
+    name: 'UserInfo',
+    component: () => import(/* webpackChunkName: "userInfo" */ '../views/user/UserInfo.vue'),
     meta: {
       keepAlive: false // 不需要缓存
     }

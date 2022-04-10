@@ -2,11 +2,12 @@
   <div class="wrapper">
     <div class="comment__wrapper">
       <div class="avatar">
-        <el-avatar style="--el-avatar-size: .35rem" :src="comment.user.avatar" />
+        <el-avatar style="--el-avatar-size: .35rem" :src="comment.user.avatar" @click="handleAvatarClick(comment.user.id)" />
       </div>
       <div class="middle">
         <span class="nickname">{{comment.user.nickname}}</span>
         <p class="text">{{comment.commentText}}</p>
+        <span class="commentTime">{{comment.commentTime}}</span>
       </div>
       <div class="like">
         <span
@@ -21,11 +22,12 @@
     <div class="reply__wrapper">
       <div class="reply__item" v-for="(item, index) in comment.reply" :key="item.id" v-show="tips === '收起' ? true : (index < 2)">
         <div class="reply__avatar">
-          <el-avatar style="--el-avatar-size: .3rem" :src="item?.user.avatar" />
+          <el-avatar style="--el-avatar-size: .3rem" :src="item?.user.avatar" @click="handleAvatarClick(item?.user.id)" />
         </div>
         <div class="reply__middle">
           <span class="user__nickname">{{item?.user.nickname}}</span>
           <p><span class="reply__tip" v-if="item?.target.id != comment.user.id">回复 <span class="target__nickname">{{item?.target.nickname}}</span>: </span><span class="text">{{item?.replyText}}</span></p>
+          <span class="replyTime">{{item?.replyTime}}</span>
         </div>
         <div class="reply__like">
           <span
@@ -44,6 +46,7 @@
 
 <script>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { post } from '../utils/request'
 
@@ -89,20 +92,20 @@ const useDataEffect = (comment, replyIcon) => {
 const useLikeEffect = (icon, replyIcon, emit) => {
   // 处理点赞评论的事件
   const handleCommentLikeClick = async (commentId, liked) => {
-    if (!liked) {
-      liked = true
-      icon.value = '&#xe6aa;'
-      emit('changeCommentLiked', commentId, null, true, 1)
-    } else {
-      liked = false
-      icon.value = '&#xe6a9;'
-      emit('changeCommentLiked', commentId, null, false, -1)
-    }
-    console.log('评论被点赞了?', liked)
     try {
       // 发送修改点赞状态的请求
       const result = await post('/note/changeLiked', { commentId: commentId }) // 未修改
-      if (result.code !== 200) {
+      if (result.code === 200) {
+        if (!liked) {
+          liked = true
+          icon.value = '&#xe6aa;'
+          emit('changeCommentLiked', commentId, null, true, 1)
+        } else {
+          liked = false
+          icon.value = '&#xe6a9;'
+          emit('changeCommentLiked', commentId, null, false, -1)
+        }
+      } else {
         ElMessage({
           showClose: true,
           message: '发生错误',
@@ -124,19 +127,20 @@ const useLikeEffect = (icon, replyIcon, emit) => {
 
   // 处理点赞回复的事件
   const handleReplyLikeClick = async (contentUserId, replyId, index, liked) => {
-    if (!liked) {
-      liked = true
-      replyIcon.value[index] = '&#xe6aa;'
-      emit('changeCommentLiked', contentUserId, replyId, true, 1)
-    } else {
-      liked = false
-      replyIcon.value[index] = '&#xe6a9;'
-      emit('changeCommentLiked', contentUserId, replyId, false, -1)
-    }
     try {
       // 发送修改点赞状态的请求
       const result = await post('/note/changeLiked', { replyId: replyId })
-      if (result.code !== 200) {
+      if (result.code === 200) {
+        if (!liked) {
+          liked = true
+          replyIcon.value[index] = '&#xe6aa;'
+          emit('changeCommentLiked', contentUserId, replyId, true, 1)
+        } else {
+          liked = false
+          replyIcon.value[index] = '&#xe6a9;'
+          emit('changeCommentLiked', contentUserId, replyId, false, -1)
+        }
+      } else {
         ElMessage({
           showClose: true,
           message: '发生错误',
@@ -161,6 +165,16 @@ const useLikeEffect = (icon, replyIcon, emit) => {
   }
 }
 
+const useUserAvatarEffect = () => {
+  const router = useRouter()
+  const handleAvatarClick = (userId) => {
+    router.push(`/user/${userId}`)
+  }
+  return {
+    handleAvatarClick
+  }
+}
+
 export default {
   name: 'Comment',
   props: ['comment'],
@@ -182,13 +196,16 @@ export default {
       }
     }
 
+    const { handleAvatarClick } = useUserAvatarEffect()
+
     return {
       icon,
       replyIcon,
       handleCommentLikeClick,
       handleReplyLikeClick,
       tips,
-      handleExpandClick
+      handleExpandClick,
+      handleAvatarClick
     }
   }
 }
@@ -223,6 +240,11 @@ export default {
           margin: 0;
           font-size: .14rem;
           color: $textColor;
+        }
+        .commentTime{
+          line-height: .14rem;
+          font-size: .12rem;
+          color: $darkgray;
         }
       }
       .like{
@@ -283,6 +305,11 @@ export default {
               font-size: .14rem;
               color: $textColor;
             }
+          }
+          .replyTime{
+            line-height: .14rem;
+            font-size: .12rem;
+            color: $darkgray;
           }
         }
         .reply__like{

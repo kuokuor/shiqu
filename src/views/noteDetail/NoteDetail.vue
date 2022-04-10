@@ -6,10 +6,12 @@
     </div>
     <div class="author">
       <div class="avatar">
-        <el-avatar style="--el-avatar-size: .4rem" :src="noteDetail.author?.avatar" />
+        <el-avatar style="--el-avatar-size: .4rem" :src="noteDetail.author?.avatar" @click="handleAvatarClick(noteDetail.author?.id)" />
       </div>
-      <span class="nickname">{{noteDetail.author?.nickname}}</span>
-      <!-- 少一个笔记发布时间 -->
+      <div class="wrapper">
+        <span class="nickname">{{noteDetail.author?.nickname}}</span>
+        <span class="editTime">{{noteDetail.note?.editTime}}</span>
+      </div>
       <el-button v-show="noteDetail.author" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
     </div>
     <div class="more">
@@ -44,9 +46,9 @@
       </div>
     </div>
   </div>
-  <div class="footer">
+  <div class="footer" v-show="!inputting">
     <div class="comment__input">
-      <input placeholder="说亿点好听的" @focus="handleInputComment"/>
+      <input placeholder="说亿点好听的~" @focus="handleInputComment" />
     </div>
     <div class="like">
       <span
@@ -71,12 +73,19 @@
       <span class="comment__count">{{noteDetail.commentCount}}</span>
     </div>
   </div>
+  <div class="input__wrapper" v-show="inputting" ref="inputWrapperRef">
+    <div class="comment__input">
+      <input ref="inputRef" placeholder="说亿点好听的~" />
+    </div>
+    <span class="send" @click="handleSendClick">发送</span>
+  </div>
 </template>
 
 <script>
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useClickOutside } from '../../effects/useClickOutsideEffect'
+import { ref, onMounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import Loading from '../../components/Loading.vue'
@@ -101,17 +110,18 @@ export default {
   },
   setup () {
     const load = ref(true)
+    const inputting = ref(false)
     const { handleBackClick } = useBackRouterEffect()
 
-    const buttonType = ref('primary')
-    const followButtonText = ref('+关注')
+    const buttonType = ref('primary') // 关注按钮样式
+    const followButtonText = ref('+关注') // 关注按钮文字
 
     const mySwiper = ref(null)
 
-    const likedIcon = ref('&#xe6a9;')
-    const collectedIcon = ref('&#xe605;')
+    const likedIcon = ref('&#xe6a9;') // 点赞图标
+    const collectedIcon = ref('&#xe605;') // 收藏图标
 
-    const noteDetail = ref({})
+    const noteDetail = ref({}) // 笔记详情
     const route = useRoute()
     const getNoteDetail = async () => {
       try {
@@ -185,22 +195,27 @@ export default {
       getNoteDetail()
     })
 
+    // 点击用户头像进入个人资料页
+    const router = useRouter()
+    const handleAvatarClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
     const handleFollowClick = async (followed) => {
-      if (!followed) {
-        buttonType.value = ''
-        followButtonText.value = '已关注'
-        noteDetail.value.author.followed = true
-        /* 暂未修改作者的粉丝数量 */
-      } else {
-        buttonType.value = 'primary'
-        followButtonText.value = '+关注'
-        noteDetail.value.author.followed = false
-        /* 暂未修改作者的粉丝数量 */
-      }
       try {
         // 发送修改关注状态的请求
-        const result = await post('/note/changeFollowed', { noteId: noteDetail.value.author.id })
-        if (result.code !== 200) {
+        const result = await post('/author/changeFollowed', { noteId: noteDetail.value.author.id })
+        if (result.code === 200) {
+          if (!followed) {
+            buttonType.value = ''
+            followButtonText.value = '已关注'
+            noteDetail.value.author.followed = true
+          } else {
+            buttonType.value = 'primary'
+            followButtonText.value = '+关注'
+            noteDetail.value.author.followed = false
+          }
+        } else {
           ElMessage({
             showClose: true,
             message: '发生错误',
@@ -222,23 +237,24 @@ export default {
 
     // 对笔记进行点赞取消
     const handleLikeClick = async (liked) => {
-      if (!liked) {
-        likedIcon.value = '&#xe6aa;'
-        noteDetail.value.note.liked = true
-        if (typeof noteDetail.value.note.likeCount === 'number') {
-          ++noteDetail.value.note.likeCount
-        }
-      } else {
-        likedIcon.value = '&#xe6a9;'
-        noteDetail.value.note.liked = false
-        if (typeof noteDetail.value.note.likeCount === 'number') {
-          --noteDetail.value.note.likeCount
-        }
-      }
       try {
         // 发送修改点赞状态的请求
         const result = await post('/note/changeLiked', { noteId: noteDetail.value.note.id })
-        if (result.code !== 200) {
+        if (result.code === 200) {
+          if (!liked) {
+            likedIcon.value = '&#xe6aa;'
+            noteDetail.value.note.liked = true
+            if (typeof noteDetail.value.note.likeCount === 'number') {
+              ++noteDetail.value.note.likeCount
+            }
+          } else {
+            likedIcon.value = '&#xe6a9;'
+            noteDetail.value.note.liked = false
+            if (typeof noteDetail.value.note.likeCount === 'number') {
+              --noteDetail.value.note.likeCount
+            }
+          }
+        } else {
           ElMessage({
             showClose: true,
             message: '发生错误',
@@ -260,23 +276,24 @@ export default {
 
     // 对笔记进行收藏取消
     const handleCollectClick = async (collected) => {
-      if (!collected) {
-        collectedIcon.value = '&#xe64d;'
-        noteDetail.value.note.collected = true
-        if (typeof noteDetail.value.note.collectCount === 'number') {
-          ++noteDetail.value.note.collectCount
-        }
-      } else {
-        collectedIcon.value = '&#xe605;'
-        noteDetail.value.note.collected = false
-        if (typeof noteDetail.value.note.collectCount === 'number') {
-          --noteDetail.value.note.collectCount
-        }
-      }
       try {
         // 发送修改收藏状态的请求
         const result = await post('/note/changeCollected', { noteId: noteDetail.value.note.id })
-        if (result.code !== 200) {
+        if (result.code === 200) {
+          if (!collected) {
+            collectedIcon.value = '&#xe64d;'
+            noteDetail.value.note.collected = true
+            if (typeof noteDetail.value.note.collectCount === 'number') {
+              ++noteDetail.value.note.collectCount
+            }
+          } else {
+            collectedIcon.value = '&#xe605;'
+            noteDetail.value.note.collected = false
+            if (typeof noteDetail.value.note.collectCount === 'number') {
+              --noteDetail.value.note.collectCount
+            }
+          }
+        } else {
           ElMessage({
             showClose: true,
             message: '发生错误',
@@ -327,11 +344,54 @@ export default {
       })
     }
 
+    // 点击输入框外区域，收起输入框（逻辑有问题）
+    const inputWrapperRef = ref(null)
+    const { isOutside } = useClickOutside(inputWrapperRef)
+    watch(isOutside, () => {
+      console.log('点击外面了', isOutside.value)
+      // 点击外部区域，且输入框出现，则收起输入框
+      if (isOutside.value && inputting.value) {
+        inputting.value = false
+      }
+    })
+
+    const inputRef = ref(null)
     const handleInputComment = () => {
-      console.log('唤起评论') // 输入框能跟随输入法浮动
+      console.log('唤起输入框')
+      inputting.value = true
+      console.log('正在输入', inputting.value)
+      nextTick(() => {
+        inputRef.value.focus() // 输入框显示后，获取焦点
+      })
+      console.log('输入框Ref', inputRef.value)
     }
+
+    // 发送评论
+    const handleSendClick = async () => {
+      const result = await post('/note/sendComment')
+      if (result.code === 200) {
+        // 发送的评论
+        const myComment = {
+          user: {
+            id: '1',
+            nickname: '我的昵称',
+            avatar: ''
+          },
+          commentText: '我的评论',
+          liked: false,
+          likeCount: 0,
+          commentTime: new Date()
+        }
+        noteDetail.value.comments.unshift(myComment) // 新增一条评论
+        noteDetail.value.commentCount++ // 评论总数增1
+        console.log('更新后的笔记详情', noteDetail.value)
+        inputting.value = false // 发送完评论后收起输入框
+      }
+    }
+
     return {
       load,
+      inputting,
       handleBackClick,
       mySwiper,
       modules: [Navigation, Pagination, Scrollbar, A11y],
@@ -344,8 +404,12 @@ export default {
       handleCommentClick,
       handleFollowClick,
       noteDetail,
+      handleAvatarClick,
       changeCommentLiked,
-      handleInputComment
+      inputWrapperRef,
+      inputRef,
+      handleInputComment,
+      handleSendClick
     }
   }
 }
@@ -379,8 +443,20 @@ export default {
         width: .4rem;
         margin: 0 .08rem;
       }
-      .nickname{
-        font-size: .17rem;
+      .wrapper{
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        .nickname{
+          line-height: .3rem;
+          font-size: .17rem;
+        }
+        .editTime{
+          line-height: .15rem;
+          font-size: .12rem;
+          color: $darkgray;
+        }
       }
     }
     .more{
@@ -465,11 +541,15 @@ export default {
       background: $content-bgColor;
       input{
         width: 100%;
-        height: .3rem;
+        line-height: .3rem;
         padding: 0 .12rem;
         border: none;
         outline: none;
         background: none;
+        font-size: .14rem;
+        &::placeholder{
+          font-size: .14rem;
+        }
       }
     }
     .like{
@@ -516,6 +596,42 @@ export default {
         font-size: .15rem;
         color: $weakColor;
       }
+    }
+  }
+  .input__wrapper{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: .5rem;
+    padding: 0 .12rem;
+    z-index: 2;
+    background: $bgColor;
+    border-top: .01rem solid $content-bgColor;
+    display: flex;
+    align-items: center;
+    .comment__input{
+      width: 80%;
+      line-height: .3rem;
+      border-radius: .15rem;
+      background: $content-bgColor;
+      input{
+        width: 100%;
+        line-height: .3rem;
+        padding: 0 .12rem;
+        border: none;
+        outline: none;
+        background: none;
+        font-size: .14rem;
+        &::placeholder{
+          font-size: .14rem;
+        }
+      }
+    }
+    .send{
+      width: 20%;
+      font-size: .14rem;
+      color: $themeColor;
     }
   }
   :deep(.el-avatar){

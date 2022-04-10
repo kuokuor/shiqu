@@ -36,19 +36,20 @@ import { ElMessage } from 'element-plus'
 const useLikeEffect = (icon, emit) => {
   // 处理点击点赞图标的事件
   const handleLikeClick = async (noteId, liked) => {
-    if (!liked) {
-      liked = true
-      icon.value = '&#xe6aa;'
-      emit('changeLiked', noteId, true, 1)
-    } else {
-      liked = false
-      icon.value = '&#xe6a9;'
-      emit('changeLiked', noteId, false, -1)
-    }
     try {
       // 发送修改点赞状态的请求
       const result = await post('/note/changeLiked', { noteId: noteId })
-      if (result.code !== 200) {
+      if (result.code === 200) {
+        if (!liked) {
+          liked = true
+          icon.value = '&#xe6aa;'
+          emit('changeLiked', noteId, true, 1)
+        } else {
+          liked = false
+          icon.value = '&#xe6a9;'
+          emit('changeLiked', noteId, false, -1)
+        }
+      } else {
         ElMessage({
           showClose: true,
           message: '发生错误',
