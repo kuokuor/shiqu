@@ -24,11 +24,10 @@
   </div>
   <div class="main" ref="mainDiv">
     <div class="wrapper">
-      <router-link
+      <div
         v-for="item in noteList[activeIndex]"
         :key="item.note.id"
         class="content__wrapper"
-        :to="`/noteDetail/${item.note.id}`"
       >
         <contents :notes="item" @changeLiked="changeLiked" />
       </router-link>
@@ -47,6 +46,7 @@ import Docker from '../../components/Docker.vue'
 import { ref, onMounted } from 'vue'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
+import { handleCountShow } from '../../effects/useHandleCountEffect'
 
 const useTabEffect = (load, activeIndex, noteList) => {
   // 模块切换逻辑
@@ -66,7 +66,9 @@ const useTabEffect = (load, activeIndex, noteList) => {
   // 获取笔记列表
   const getNoteList = async (index, refresh) => {
     try {
+      console.log('请求了')
       const result = await get('/note/getNoteList', {
+        userId: 0,
         activeIndex: index,
         limit: 10,
         offset: startCount
@@ -74,14 +76,8 @@ const useTabEffect = (load, activeIndex, noteList) => {
       if (result.code === 200 && result.data) {
         const list = result.data
         list.forEach((column) => {
-          const likeCount = column.note.likeCount
-          if (likeCount / 10000 >= 1) {
-            let format = (likeCount / 10000).toFixed(1)
-            if (format > 10) {
-              format = Math.floor(format)
-            }
-            column.note.likeCount = `${format}万`
-          }
+          const likeCount = handleCountShow(column.note.likeCount) // 格式化点赞数量
+          column.note.likeCount = likeCount
         })
         // 刷新笔记列表
         if (refresh) {
