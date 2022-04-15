@@ -88,6 +88,7 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
+import { handleCountShow } from '../../effects/useHandleCountEffect'
 import Loading from '../../components/Loading.vue'
 import Comment from '../../components/Comment.vue'
 
@@ -104,7 +105,7 @@ const useInitDataEffect = (noteDetail) => {
   const load = ref(true)
 
   const buttonType = ref('primary') // 关注按钮样式
-  const followButtonText = ref('+关注') // 关注按钮文字
+  const followButtonText = ref('+ 关注') // 关注按钮文字
 
   const likedIcon = ref('&#xe6a9;') // 点赞图标
   const collectedIcon = ref('&#xe605;') // 收藏图标
@@ -115,23 +116,13 @@ const useInitDataEffect = (noteDetail) => {
       const result = await get(`/getNoteDetail/${route.params.id}`)
       if (result.code === 200 && result.data) {
         const detail = result.data
-        console.log('笔记详情', detail)
-        const likeCount = detail.note.likeCount
-        if (likeCount / 10000 >= 1) {
-          let format = (likeCount / 10000).toFixed(1)
-          if (format > 10) {
-            format = Math.floor(format)
-          }
-          detail.note.likeCount = `${format}万`
-        }
-        const collectCount = detail.note.collectCount
-        if (collectCount / 10000 >= 1) {
-          let format = (collectCount / 10000).toFixed(1)
-          if (format > 10) {
-            format = Math.floor(format)
-          }
-          detail.note.collectCount = `${format}万`
-        }
+        // 格式化点赞数量
+        const likeCount = handleCountShow(detail.note.likeCount)
+        detail.note.likeCount = likeCount
+        // 格式化收藏数量
+        const collectCount = handleCountShow(detail.note.collectCount)
+        detail.note.collectCount = collectCount
+        // 统计评论回复总数量
         detail.commentCount = 0
         if (detail.comments) {
           detail.commentCount += detail.comments.length
@@ -142,7 +133,6 @@ const useInitDataEffect = (noteDetail) => {
           })
         }
         noteDetail.value = detail
-        console.log('最终笔记详情', noteDetail.value)
         // 初始化关注按钮状态
         if (noteDetail.value.author.followed) {
           buttonType.value = ''
@@ -201,7 +191,7 @@ const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
           noteDetail.value.author.followed = true
         } else {
           buttonType.value = 'primary'
-          followButtonText.value = '+关注'
+          followButtonText.value = '+ 关注'
           noteDetail.value.author.followed = false
         }
       } else {
@@ -697,7 +687,6 @@ export default {
     top: .1rem;
   }
   :deep(.el-button){
-    width: .56rem;
     height: .32rem;
     font-size: .12rem;
   }
@@ -709,5 +698,5 @@ export default {
     color: var(--el-button-text-color);
     border-color: var(--el-button-border-color);
     background-color: var(--el-button-bg-color);
-}
+  }
 </style>

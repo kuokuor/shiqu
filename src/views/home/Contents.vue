@@ -1,5 +1,5 @@
 <template>
-  <el-card shadow="never">
+  <el-card shadow="never" @click="toNoteDetail">
     <img
       :src="notes.images[0]"
       class="image"
@@ -17,7 +17,7 @@
           <span
             :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': notes.note.liked}"
             v-html="icon"
-            @click="handleLikeClick(notes.note.id, notes.note.liked)"
+            @click.stop="handleLikeClick(notes.note.id, notes.note.liked)"
           >
           </span>
           <span class="like__count">{{notes.note.likeCount}}</span>
@@ -29,6 +29,7 @@
 
 <script>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 
@@ -80,9 +81,15 @@ export default {
     const icon = props.notes.note.liked ? ref('&#xe6aa;') : ref('&#xe6a9;')
     const { emit } = context
     const { handleLikeClick } = useLikeEffect(icon, emit)
+    const router = useRouter()
+    const toNoteDetail = () => {
+      router.push(`/noteDetail/${props.notes.note.id}`)
+      console.log(props.notes.note.title)
+    }
     return {
       icon,
-      handleLikeClick
+      handleLikeClick,
+      toNoteDetail
     }
   }
 }
@@ -117,7 +124,7 @@ export default {
       align-items: center;
       .author{
         width: 63%;
-        //height: .24rem;
+        height: .24rem;
         display: flex;
         align-items: center;
         .avatar{
@@ -131,6 +138,7 @@ export default {
       }
       .like{
         width: 36%;
+        height: .24rem;
         display: flex;
         justify-content: end;
         align-items: center;

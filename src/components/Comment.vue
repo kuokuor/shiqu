@@ -49,6 +49,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { post } from '../utils/request'
+import { handleCountShow } from '../effects/useHandleCountEffect'
 
 // 初始化数据的逻辑
 const useDataEffect = (comment, replyIcon) => {
@@ -62,24 +63,14 @@ const useDataEffect = (comment, replyIcon) => {
         }
       })
     }
-    // 处理评论的点赞数
-    if (comment.likeCount / 10000 >= 1) {
-      let format = (comment.likeCount / 10000).toFixed(1)
-      if (format > 10) {
-        format = Math.floor(format)
-      }
-      comment.likeCount = `${format}万`
-    }
-    // 处理回复的点赞数
+    // 格式化评论的点赞数
+    const likeCount = handleCountShow(comment.likeCount)
+    comment.likeCount = likeCount
+    // 格式化回复的点赞数
     if (comment.reply) {
       comment.reply.forEach((item) => {
-        if (item.likeCount / 10000 >= 1) {
-          let format = (item.likeCount / 10000).toFixed(1)
-          if (format > 10) {
-            format = Math.floor(format)
-          }
-          item.likeCount = `${format}万`
-        }
+        const likeCount = handleCountShow(item.likeCount)
+        item.likeCount = likeCount
       })
     }
   }
