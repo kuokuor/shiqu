@@ -186,7 +186,7 @@ export default {
         tips.value = '收起'
       }
     }
-
+    
     const { handleAvatarClick } = useUserAvatarEffect()
 
     return {
