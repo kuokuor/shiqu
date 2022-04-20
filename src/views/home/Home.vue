@@ -30,7 +30,7 @@
         class="content__wrapper"
       >
         <contents :notes="item" @changeLiked="changeLiked" />
-      </router-link>
+      </div>
     </div>
     <load-more v-if="loadMore" />
     <div class="noMore" v-if="!loadMore">哎呀 已经到底啦~</div>

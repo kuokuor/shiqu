@@ -409,7 +409,7 @@ export default {
     // 编辑资料
     const router = useRouter()
     const handleEditClick = () => {
-      router.push()
+      router.push('/editInfo')
     }
 
     // 关注

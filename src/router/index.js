@@ -43,6 +43,14 @@ const routes = [
     meta: {
       keepAlive: false // 不需要缓存
     }
+  },
+  {
+    path: '/editInfo',
+    name: 'EditInfo',
+    component: () => import(/* webpackChunkName: "editInfo" */ '../views/user/EditInfo.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
   }
 ]
 
