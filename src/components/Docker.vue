@@ -18,9 +18,14 @@
       </router-link>
     </div>
     <div :class="{'docker__item': true, 'docker__item--active': currentIndex === 3}">
-      <router-link :to="{ name: 'Home'}">
+      <router-link :to="{ name: 'Message'}">
         <a class="iconfont">&#xe631;</a>
+        <!--<el-badge :value="unreadTotal" :max="99" :hidden="unreadTotal === 0">
+          <div class="docker__title">消息</div>
+        </el-badge>-->
         <div class="docker__title">消息</div>
+        <!--<span><el-badge :value="unreadTotal" :max="99" :hidden="unreadTotal === 0" /></span>-->
+        <el-badge :value="unreadTotal" :max="99" :hidden="unreadTotal === 0" />
       </router-link>
     </div>
     <div :class="{'docker__item': true, 'docker__item--active': currentIndex === 4}">
@@ -35,7 +40,7 @@
 <script>
 export default {
   name: 'Docker',
-  props: ['currentIndex']
+  props: ['currentIndex', 'unreadTotal']
 }
 </script>
 
@@ -80,6 +85,10 @@ export default {
       font-size: .24rem;
       transform: scale(.5, .5); //缩小一半
       transform-origin: center top; //以中心和顶部为原点
+    }
+    :deep(sup) {
+      top: -0.65rem;
+      left: 0.2rem;
     }
   }
 </style>

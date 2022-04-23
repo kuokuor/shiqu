@@ -10,6 +10,14 @@ const routes = [
     }
   },
   {
+    path: '/message',
+    name: 'Message',
+    component: () => import(/* webpackChunkName: "message" */ '../views/message/Message.vue'),
+    meta: {
+      keepAlive: true // 需要缓存
+    }
+  },
+  {
     path: '/registerAndLogin',
     name: 'RegisterAndLogin',
     // route level code-splitting
