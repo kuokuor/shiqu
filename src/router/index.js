@@ -18,6 +18,14 @@ const routes = [
     }
   },
   {
+    path: '/chat/:userId',
+    name: 'Chat',
+    component: () => import(/* webpackChunkName: "chat" */ '../views/message/Chat.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  {
     path: '/registerAndLogin',
     name: 'RegisterAndLogin',
     // route level code-splitting

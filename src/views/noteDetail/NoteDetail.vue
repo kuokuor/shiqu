@@ -309,7 +309,7 @@ const useCollectedEffect = (noteDetail, collectedIcon) => {
 const useCommentEffect = (noteDetail) => {
   // 点击评论图标定位到评论区域
   const handleCommentClick = () => {
-    const detailHeight = document.getElementsByClassName('detail')[0].offsetHeight
+    const detailHeight = document.getElementsByClassName('detail')[0].offsetHeight // detail元素的可见高度
     const mainDiv = document.getElementsByClassName('main')[0]
     mainDiv.scrollTop = detailHeight
   }

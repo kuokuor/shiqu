@@ -54,7 +54,7 @@
     </div>
     <div class="letter" v-show="activeIndex === 1">
       <el-empty description="网络一线牵，主动才有缘~" v-if="letterList && !letterList.length" />
-      <div v-for="item in letterList" :key="item.id" class="letter__item">
+      <div v-for="item in letterList" :key="item.id" class="letter__item" @click="toChat(item.from.id)">
         <span class="letter__avatar">
           <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" />
         </span>
@@ -103,6 +103,7 @@
 
 <script>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import Docker from '../../components/Docker.vue'
@@ -259,6 +260,18 @@ export default {
       }
     }
 
+    const router = useRouter()
+    const toChat = (userId) => {
+      // 将当前点击的私信未读数量置为0（可删除，后台会有相应操作）
+      letterList.value.forEach((item) => {
+        if (item.from.id === userId) {
+          unreadLetter.value -= item.letter.unreadCount // 减去当前已读私信数量
+          item.letter.unreadCount = 0 // 当前私信未读数量置为0
+        }
+      })
+      router.push(`/chat/${userId}`)
+    }
+
     return {
       activeIndex,
       unreadTotal,
@@ -270,7 +283,8 @@ export default {
       unreadOfficial,
       handleTabClick,
       manageIcon,
-      handleManageClick
+      handleManageClick,
+      toChat
     }
   }
 }
