@@ -53,6 +53,14 @@ const routes = [
     }
   },
   {
+    path: '/my',
+    name: 'My',
+    component: () => import(/* webpackChunkName: "my" */ '../views/my/My.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  {
     path: '/user/:userId',
     name: 'UserInfo',
     component: () => import(/* webpackChunkName: "userInfo" */ '../views/user/UserInfo.vue'),

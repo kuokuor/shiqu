@@ -3,10 +3,7 @@
     <div class="above">
       <div class="header">
         <el-row :gutter="20" class="header__wrapper">
-          <el-col :span="3">
-            <i class="iconfont back__icon" @click="handleBackClick">&#xe600;</i>
-          </el-col>
-          <el-col :span="3" :offset="18">
+          <el-col :span="3" :offset="21">
             <i class="iconfont set__icon">&#xe65e;</i>
           </el-col>
         </el-row>
@@ -18,20 +15,9 @@
           </el-col>
           <el-col :span="11" :offset="8" style="text-align: center;">
             <!-- 如果是用户本人就显示[编辑资料], 否则显示[关注 私信] -->
-            <el-button round class="button" @click="handleEditClick" v-if="userInfo.user?.id === holderUserId">
+            <el-button round class="button" @click="handleEditClick">
               <span class="button__text">编辑资料</span>
             </el-button>
-            <div v-else>
-              <el-button round class="button" @click="handleChatClick">
-                <span class="button__text">私信</span>
-              </el-button>
-              <el-button round class="button" @click="handleFollowClick(userInfo, false, -1)" v-if="userInfo.followed">
-                <span class="button__text" style="color: #333333b3;">已关注</span>
-              </el-button>
-              <el-button round class="button" @click="handleFollowClick(userInfo, true, 1)" v-else>
-                <span class="button__text">+关注</span>
-              </el-button>
-            </div>
           </el-col>
         </el-row>
         <el-row style="margin: .08rem 0; text-align: left;">
@@ -105,6 +91,7 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+    <docker :currentIndex="4" />
     <el-drawer v-model="followDrawer" title="followList" :with-header="false" size="75%">
       <div class="title">TA关注的人</div>
       <div class="list__wrapper" v-for="item in followList" :key="item.user.id">
@@ -184,10 +171,10 @@ import { get, post } from '../../utils/request'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
 import Contents from '../home/Contents'
 import LoadMore from '../../components/loadMore'
+import Docker from '../../components/Docker.vue'
 
 const useHolderUserEffect = () => {
   const holderUserId = ref('') // 当前使用者id
@@ -390,7 +377,8 @@ export default {
   name: 'UserInfo',
   components: {
     Contents,
-    LoadMore
+    LoadMore,
+    Docker
   },
   setup () {
     const { holderUserId, getHolderUserId } = useHolderUserEffect() // 处理当前使用者相关逻辑
@@ -398,13 +386,6 @@ export default {
 
     const { userInfo, route, getUserInfo } = useUserInfoEffect() // 处理用户信息相关逻辑
     getUserInfo()
-
-    const { handleBackClick } = useBackRouterEffect() // 返回上一页
-
-    // 私信
-    const handleChatClick = () => {
-      console.log('暂未开发私信')
-    }
 
     // 编辑资料
     const router = useRouter()
@@ -571,8 +552,6 @@ export default {
     return {
       holderUserId,
       userInfo,
-      handleBackClick,
-      handleChatClick,
       handleEditClick,
       handleFollowClick,
       showFollow,
@@ -626,10 +605,6 @@ export default {
       }
     }
   }
-  .back__icon{
-    top: -.04rem;
-    left: -.1rem;
-  }
   .set__icon{
     font-size: .25rem;
     position: relative;
@@ -670,7 +645,7 @@ export default {
     }
   }
   .under {
-    height: 65%;
+    height: calc(65% - .5rem);
     overflow: auto;
     background: $bgColor;
   }
