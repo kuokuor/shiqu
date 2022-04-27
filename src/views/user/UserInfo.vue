@@ -403,7 +403,7 @@ export default {
 
     // 私信
     const handleChatClick = () => {
-      console.log('暂未开发私信')
+      router.push(`/chat/${route.params.userId}`)
     }
 
     // 编辑资料

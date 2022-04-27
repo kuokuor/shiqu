@@ -10,6 +10,14 @@ const routes = [
     }
   },
   {
+    path: '/createNote',
+    name: 'CreateNote',
+    component: () => import(/* webpackChunkName: "createNote" */ '../views/post/CreateNote.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  {
     path: '/message',
     name: 'Message',
     component: () => import(/* webpackChunkName: "message" */ '../views/message/Message.vue'),

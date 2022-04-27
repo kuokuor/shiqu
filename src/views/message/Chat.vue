@@ -133,6 +133,7 @@ export default {
 
     // 发送消息
     const sendText = async () => {
+      // 没有输入内容或内容为空时，不可发送
       if (!isInput.value || contentText.value === '') {
         return
       }

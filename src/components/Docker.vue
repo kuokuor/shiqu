@@ -13,7 +13,7 @@
       </router-link>
     </div>
     <div class="docker__item">
-      <router-link class="iconfont createNote" :to="{ name: 'Home'}">
+      <router-link class="iconfont createNote" :to="{ name: 'CreateNote'}">
         &#xe64f;
       </router-link>
     </div>
