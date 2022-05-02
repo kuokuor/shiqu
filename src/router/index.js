@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
-  {
+  { // 首页
     path: '/',
     name: 'Home',
     component: () => import(/* webpackChunkName: "home" */ '../views/home/Home.vue'),
@@ -48,6 +48,14 @@ const routes = [
     path: '/resetPass',
     name: 'ResetPass',
     component: () => import(/* webpackChunkName: "resetPass" */ '../views/registerAndLogin/ResetPass.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 搜索
+    path: '/search',
+    name: 'Search',
+    component: () => import(/* webpackChunkName: "search" */ '../views/search/Search.vue'),
     meta: {
       keepAlive: false // 不需要缓存
     }

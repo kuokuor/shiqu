@@ -26,7 +26,7 @@
   </div>
   <div class="main">
     <div class="notice" v-show="activeIndex === 0">
-      <el-empty description="还没有任何通知哟~" v-if="!noticeList && !noticeList.length" />
+      <el-empty description="还没有任何通知哟~" v-if="!noticeList || !noticeList.length" />
       <div v-for="item in noticeList" :key="item.id" class="notice__item">
         <span class="notice__avatar">
           <el-badge is-dot :hidden="item.isUnread === false">
@@ -53,7 +53,7 @@
       </div>
     </div>
     <div class="letter" v-show="activeIndex === 1">
-      <el-empty description="网络一线牵，主动才有缘~" v-if="letterList && !letterList.length" />
+      <el-empty description="网络一线牵，主动才有缘~" v-if="!letterList || !letterList.length" />
       <div v-for="item in letterList" :key="item.id" class="letter__item" @click="toChat(item.from.id)">
         <span class="letter__avatar">
           <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" />
@@ -78,7 +78,7 @@
       </div>
     </div>
     <div class="official" v-show="activeIndex === 2">
-      <el-empty description="空空如也~" v-if="officialList && !officialList.length" />
+      <el-empty description="空空如也~" v-if="!officialList || !officialList.length" />
       <div v-for="item in officialList" :key="item.id" class="official__item">
         <span class="official__avatar">
           <el-badge is-dot :hidden="item.isUnread === false">

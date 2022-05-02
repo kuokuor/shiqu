@@ -19,7 +19,7 @@
       </li>
     </ul>
     <div class="search">
-      <a class="iconfont search__icon">&#xe802;</a>
+      <a class="iconfont search__icon" @click="handleSearch">&#xe802;</a>
     </div>
   </div>
   <div class="main" ref="mainDiv">
@@ -44,6 +44,7 @@ import Contents from './Contents.vue'
 import LoadMore from '../../components/loadMore.vue'
 import Docker from '../../components/Docker.vue'
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
@@ -170,6 +171,11 @@ export default {
       }
     }
 
+    // 点击搜索图标进入搜索页
+    const router = useRouter()
+    const handleSearch = () => {
+      router.push('/search')
+    }
     return {
       load,
       activeIndex,
@@ -178,7 +184,8 @@ export default {
       getNoteList,
       changeLiked,
       loadMore,
-      mainDiv
+      mainDiv,
+      handleSearch
     }
   }
 }
