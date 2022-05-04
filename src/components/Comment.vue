@@ -13,7 +13,7 @@
         <span
           :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': comment.liked}"
           v-html="icon"
-          @click="handleCommentLikeClick(comment.user.id, comment.liked)"
+          @click="handleCommentLikeClick(comment.id, comment.liked)"
         >
         </span>
         <span class="like__count">{{comment.likeCount}}</span>
@@ -26,14 +26,14 @@
         </div>
         <div class="reply__middle">
           <span class="user__nickname">{{item?.user.nickname}}</span>
-          <p><span class="reply__tip" v-if="item?.target.id != comment.user.id">回复 <span class="target__nickname">{{item?.target.nickname}}</span>: </span><span class="text">{{item?.replyText}}</span></p>
+          <p><span class="reply__tip" v-if="item?.target != null">回复 <span class="target__nickname">{{item?.target.nickname}}</span>: </span><span class="text">{{item?.replyText}}</span></p>
           <span class="replyTime">{{item?.replyTime}}</span>
         </div>
         <div class="reply__like">
           <span
             :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': item?.liked}"
             v-html="replyIcon[index]"
-            @click="handleReplyLikeClick(comment.user.id, item?.id, index, item?.liked)"
+            @click="handleReplyLikeClick(comment.id, item?.id, index, item?.liked)"
           >
           </span>
           <span class="like__count">{{item?.likeCount}}</span>
@@ -117,7 +117,7 @@ const useLikeEffect = (icon, replyIcon, emit) => {
   }
 
   // 处理点赞回复的事件
-  const handleReplyLikeClick = async (contentUserId, replyId, index, liked) => {
+  const handleReplyLikeClick = async (contentId, replyId, index, liked) => {
     try {
       // 发送修改点赞状态的请求
       const result = await post('/note/changeLiked', { replyId: replyId })
@@ -125,11 +125,11 @@ const useLikeEffect = (icon, replyIcon, emit) => {
         if (!liked) {
           liked = true
           replyIcon.value[index] = '&#xe6aa;'
-          emit('changeCommentLiked', contentUserId, replyId, true, 1)
+          emit('changeCommentLiked', contentId, replyId, true, 1)
         } else {
           liked = false
           replyIcon.value[index] = '&#xe6a9;'
-          emit('changeCommentLiked', contentUserId, replyId, false, -1)
+          emit('changeCommentLiked', contentId, replyId, false, -1)
         }
       } else {
         ElMessage({
