@@ -41,7 +41,7 @@
     <div class="comments">
       <div class="comments__total">{{`共${noteDetail.commentCount}条评论`}}</div>
       <!-- 评论列表 -->
-      <div v-for="item in noteDetail.comments" :key="item.user.id">
+      <div v-for="item in noteDetail.comments" :key="item.id">
         <comment :comment="item" @changeCommentLiked="changeCommentLiked"/>
       </div>
     </div>
@@ -315,9 +315,9 @@ const useCommentEffect = (noteDetail) => {
   }
 
   // 对评论或回复点赞取消
-  const changeCommentLiked = (contentUserId, replyId, liked, count) => {
+  const changeCommentLiked = (contentId, replyId, liked, count) => {
     noteDetail.value.comments = noteDetail.value.comments.map((comment) => {
-      if (comment.user.id === contentUserId) {
+      if (comment.id === contentId) {
         if (replyId) { // 对回复进行点赞取消操作
           comment.reply = comment.reply.map((item) => {
             if (item.id === replyId) {

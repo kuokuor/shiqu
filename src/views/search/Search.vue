@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'

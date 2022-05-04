@@ -7,9 +7,9 @@
       </router-link>
     </div>
     <div :class="{'docker__item': true, 'docker__item--active': currentIndex === 2}">
-      <router-link :to="{ name: 'Home'}">
-        <a class="iconfont">&#xe612;</a>
-        <div class="docker__title">食友</div>
+      <router-link :to="{ name: 'Classify'}">
+        <a class="iconfont">&#xf085;</a>
+        <div class="docker__title">分类</div>
       </router-link>
     </div>
     <div class="docker__item">
