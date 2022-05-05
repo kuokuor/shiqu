@@ -140,8 +140,7 @@ export default {
       try {
         const chat = {
           toId: userId,
-          content: contentText.value,
-          fromId: myUserId.value
+          content: contentText.value
         }
         const result = await post('/message/sendText', chat)
         if (result.code === 200) {
@@ -275,12 +274,12 @@ export default {
       .input__wrapper{
         flex: 1;
         line-height: .3rem;
+        padding: 0 .12rem;
         border-radius: .15rem;
         background: $bgColor;
         input{
           width: 100%;
           line-height: .3rem;
-          padding: 0 .12rem;
           border: none;
           outline: none;
           background: none;

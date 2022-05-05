@@ -144,7 +144,45 @@ export default {
       title: '', // 笔记的标题
       content: '', // 正文内容
       type: '', // 笔记类型（0: 美食笔记；1: 探店笔记）（页面上显示string，传给后端对应number还是string待定）
-      tags: [] // 标签
+      tags: [], // 标签
+      photoList: [
+        {
+          name: 'food.jpeg',
+          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Ftupian.qqjay.com%2Fu%2F2016%2F0919%2F1_171052_3.jpg&refer=http%3A%2F%2Ftupian.qqjay.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653481677&t=d5d0351302aa3025bccd920518a522a0'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi-1.lanrentuku.com%2F2020%2F7%2F10%2Fb87c8e05-344a-48d1-869f-ef6929fc8b17.jpg&refer=http%3A%2F%2Fi-1.lanrentuku.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653482496&t=6593efac0c365a9302c5a33618ec2e03'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
+        },
+        {
+          name: 'food.jpeg',
+          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
+        }
+      ] // 图片列表
     })
 
     onMounted(() => {
@@ -194,44 +232,44 @@ export default {
     }
 
     // 上传的图片列表（跟随上传和删除动作响应式变化）
-    const photoList = ref([
-      {
-        name: 'food.jpeg',
-        url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Ftupian.qqjay.com%2Fu%2F2016%2F0919%2F1_171052_3.jpg&refer=http%3A%2F%2Ftupian.qqjay.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653481677&t=d5d0351302aa3025bccd920518a522a0'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi-1.lanrentuku.com%2F2020%2F7%2F10%2Fb87c8e05-344a-48d1-869f-ef6929fc8b17.jpg&refer=http%3A%2F%2Fi-1.lanrentuku.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653482496&t=6593efac0c365a9302c5a33618ec2e03'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
-      },
-      {
-        name: 'food.jpeg',
-        url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
-      }
-    ])
+    // const photoList = ref([
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Ftupian.qqjay.com%2Fu%2F2016%2F0919%2F1_171052_3.jpg&refer=http%3A%2F%2Ftupian.qqjay.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653481677&t=d5d0351302aa3025bccd920518a522a0'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi-1.lanrentuku.com%2F2020%2F7%2F10%2Fb87c8e05-344a-48d1-869f-ef6929fc8b17.jpg&refer=http%3A%2F%2Fi-1.lanrentuku.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653482496&t=6593efac0c365a9302c5a33618ec2e03'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
+    //  },
+    //  {
+    //    name: 'food.jpeg',
+    //    url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
+    //  }
+    // ])
 
     const dialogImageUrl = ref('') // 当前预览图片的url
     const photoDialogVisible = ref(false) // 预览图片的对话框
@@ -311,7 +349,7 @@ export default {
       }
     }
 
-    const { title, content, type, tags } = toRefs(noteData)
+    const { title, content, type, tags, photoList } = toRefs(noteData)
 
     return {
       backDialogVisible,

@@ -88,11 +88,11 @@ const useLikeEffect = (icon, replyIcon, emit) => {
       const result = await post('/note/changeLiked', { commentId: commentId }) // 未修改
       if (result.code === 200) {
         if (!liked) {
-          liked = true
+          // liked = true
           icon.value = '&#xe6aa;'
           emit('changeCommentLiked', commentId, null, true, 1)
         } else {
-          liked = false
+          // liked = false
           icon.value = '&#xe6a9;'
           emit('changeCommentLiked', commentId, null, false, -1)
         }
@@ -123,11 +123,11 @@ const useLikeEffect = (icon, replyIcon, emit) => {
       const result = await post('/note/changeLiked', { replyId: replyId })
       if (result.code === 200) {
         if (!liked) {
-          liked = true
+          // liked = true
           replyIcon.value[index] = '&#xe6aa;'
           emit('changeCommentLiked', contentId, replyId, true, 1)
         } else {
-          liked = false
+          // liked = false
           replyIcon.value[index] = '&#xe6a9;'
           emit('changeCommentLiked', contentId, replyId, false, -1)
         }
