@@ -261,7 +261,7 @@ export default {
     }
 
     const router = useRouter()
-    const toChat = (userId) => {
+    const toChat = (targetId) => {
       // 将当前点击的私信未读数量置为0（可删除，后台会有相应操作）
       // letterList.value.forEach((item) => {
       //  if (item.from.id === userId) {
@@ -269,7 +269,7 @@ export default {
       //    item.letter.unreadCount = 0 // 当前私信未读数量置为0
       //  }
       // })
-      router.push(`/chat/${userId}`)
+      router.push(`/chat/${targetId}`)
     }
 
     return {

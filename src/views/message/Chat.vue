@@ -2,7 +2,7 @@
   <div class="chat__box">
     <div class="header">
       <a class="iconfont back__icon" @click.prevent="handleBackClick">&#xe600;</a>
-      <span>{{userId}}</span>
+      <span>{{targetNickname}}</span>
     </div>
     <div class="msg__box" ref="msgBox">
       <div
@@ -10,17 +10,17 @@
         :key="index"
         class="msg__wrapper"
       >
-        <div class="msg" v-if="item.userId === myUserId" style="float: right;"> <!-- 我发的消息 -->
+        <div class="msg" v-if="item.fromId === myUserId" style="float: right;"> <!-- 我发的消息 -->
           <div class="user__msg">
             <span>{{item.content}}</span>
           </div>
           <div class="user__header">
-            <el-avatar style="--el-avatar-size: .3rem" :src="item.avatar" />
+            <el-avatar style="--el-avatar-size: .3rem" :src="myAvatar" />
           </div>
         </div>
         <div class="msg" v-else> <!-- 对方发的 -->
           <div class="user__header">
-            <el-avatar style="--el-avatar-size: .3rem" :src="item.avatar" />
+            <el-avatar style="--el-avatar-size: .3rem" :src="targetAvatar" />
           </div>
           <div class="user__msg">
             <span>{{item.content}}</span>
@@ -48,7 +48,9 @@ export default {
   name: 'Chat',
   setup () {
     const route = useRoute()
-    const userId = route.params.userId // 对方的id
+    const targetId = route.params.targetId // 对方的id
+    const targetNickname = ref('') // 对方的昵称
+    const targetAvatar = ref('') // 对方的头像
     const contentText = ref('') // 发送的消息内容
     const myUserId = ref('') // 自己的id
     const myAvatar = ref('') // 自己的头像
@@ -58,44 +60,19 @@ export default {
 
     const sendMsg = ref(null) // input框
 
-    // 获取持有者信息
-    const getHolderInfo = async () => {
-      try {
-        const result = await get('/user/getHolderInfo')
-        if (result.code === 200 && result.data) {
-          const userData = result.data
-          myUserId.value = userData.id
-          myAvatar.value = userData.avatar
-          console.log('我的id', myUserId.value)
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
     // 获取聊天记录
     const getChatList = async () => {
       try {
+        const formData = new FormData()
+        formData.append('targetId', targetId)
         console.log('请求了聊天记录')
-        const result = await get('/message/getChatList', { userId: userId })
+        const result = await get('/message/getChatList', formData)
         if (result.code === 200 && result.data) {
-          const list = result.data
-          console.log('聊天记录', list)
-          chatList.value = [...list]
+          targetNickname.value = result.data.target.nickname
+          targetAvatar.value = result.data.target.avatar
+          myUserId.value = result.data.holder.id
+          myAvatar.value = result.data.holder.avatar
+          chatList.value = [...result.data.letterList]
           nextTick(() => {
             const scrollHeight = msgBox.value.scrollHeight // 聊天框整体高度
             const clientHeight = msgBox.value.clientHeight // 聊天框可视高度
@@ -104,7 +81,7 @@ export default {
         } else {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '错误' + result.code,
             type: 'error',
             center: true,
             duration: 1000
@@ -138,15 +115,14 @@ export default {
         return
       }
       try {
-        const chat = {
-          toId: userId,
-          content: contentText.value
-        }
-        const result = await post('/message/sendText', chat)
+        const formData = new FormData()
+        formData.append('toId', targetId)
+        formData.append('content', contentText.value)
+        const result = await post('/message/sendText', formData)
         if (result.code === 200) {
           const newChat = {
             id: '',
-            userId: myUserId.value,
+            fromId: myUserId.value,
             avatar: myAvatar.value,
             content: contentText.value
           }
@@ -163,7 +139,7 @@ export default {
         } else {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '错误' + result.code,
             type: 'error',
             center: true,
             duration: 1000
@@ -183,13 +159,14 @@ export default {
     const msgBox = ref(null) // 聊天记录展示框
 
     onMounted(() => {
-      getHolderInfo()
       getChatList()
     })
 
     return {
-      userId,
+      targetNickname,
+      targetAvatar,
       myUserId,
+      myAvatar,
       contentText,
       chatList,
       handleBackClick,
