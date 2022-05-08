@@ -32,7 +32,7 @@
           :key="item.note.id"
           class="content__wrapper"
         >
-          <contents :notes="item" @changeLiked="changeLiked" />
+          <contents :noteData="item" @changeLiked="changeLiked" />
         </div>
       </div>
       <load-more v-if="loadMore" />

@@ -13,12 +13,6 @@
         </el-badge>
         <div :class="{'line': activeIndex === 1}"></div>
       </li>
-      <li class="nav__item" @click="handleTabClick(2)">
-        <el-badge :value="unreadOfficial" :max="99" :hidden="unreadOfficial === 0">
-          <span :class="{'nav-link': true, 'active': activeIndex === 2}" :tab="activeIndex">官方</span>
-        </el-badge>
-        <div :class="{'line': activeIndex === 2}"></div>
-      </li>
     </ul>
     <div class="manage">
       <span class="iconfont manage__icon" @click="handleManageClick" v-html="manageIcon"></span>
@@ -26,6 +20,24 @@
   </div>
   <div class="main">
     <div class="notice" v-show="activeIndex === 0">
+      <div class="notice__header">
+        <div class="icon__wrapper">
+          <span class="iconfont like__icon">&#xe610;</span>
+          <span>点赞</span>
+        </div>
+        <div class="icon__wrapper">
+          <span class="iconfont collect__icon">&#xe60b;</span>
+          <span>收藏</span>
+        </div>
+        <div class="icon__wrapper">
+          <span class="iconfont share__icon">&#xe62c;</span>
+          <span>分享</span>
+        </div>
+        <div class="icon__wrapper">
+          <span class="iconfont fans__icon">&#xe6d8;</span>
+          <span>粉丝</span>
+        </div>
+      </div>
       <el-empty description="还没有任何通知哟~" v-if="!noticeList || !noticeList.length" />
       <div v-for="item in noticeList" :key="item.id" class="notice__item">
         <span class="notice__avatar">
@@ -38,12 +50,15 @@
             <div>
               <span class="notice__nickname">{{ item.from.nickname }}</span>
               <span class="notice__type" v-if="item.type === 0">赞了你</span>
-              <span class="notice__type" v-else-if="item.type === 1">评论：</span>
-              <span class="notice__type" v-else-if="item.type === 2">回复：</span>
+              <span class="notice__type" v-else-if="item.type === 1">评论了你：</span>
+              <span class="notice__type" v-else-if="item.type === 2">回复了你：</span>
               <span class="notice__type" v-else-if="item.type === 3">收藏了你的笔记</span>
               <span class="notice__type" v-else-if="item.type === 4">分享了你的笔记</span>
             </div>
-            <span class="notice__content">{{ item.notice.content }}</span>
+            <span class="iconfont tips__icon" v-if="item.type === 0">&#xe6aa; +1</span>
+            <span class="notice__content" v-else-if="item.type === 1 || item.type === 2">{{ item.notice.content }}</span>
+            <span class="iconfont tips__icon" v-else-if="item.type === 3">&#xe64d; +1</span>
+            <span class="iconfont tips__icon" v-else-if="item.type === 4">&#xe679; +1</span>
             <span class="notice__time">{{item.notice.time}}</span>
           </div>
           <div class="notice__right">
@@ -73,25 +88,6 @@
             </div>
             <span class="letter__unreadCount"><el-badge :value="item.letter.unreadCount" :max="99" :hidden="item.letter.unreadCount === 0" /></span>
           </div>
-          <el-divider style="margin-bottom: 0; margin-top: .1rem; border-top: 1px solid #f1f1f1;" />
-        </div>
-      </div>
-    </div>
-    <div class="official" v-show="activeIndex === 2">
-      <el-empty description="空空如也~" v-if="!officialList || !officialList.length" />
-      <div v-for="item in officialList" :key="item.id" class="official__item">
-        <span class="official__avatar">
-          <el-badge is-dot :hidden="item.isUnread === false">
-            <el-avatar style="--el-avatar-size: .4rem" :src="item.avatar" />
-          </el-badge>
-        </span>
-        <div class="official__right">
-          <div class="title__wrapper">
-            <span class="official__type" v-if="item.type === 0">【公告】</span>
-            <span class="official__type" v-else-if="item.type === 1">【审核】</span>
-            <span class="official__title">{{ item.title }}</span>
-          </div>
-          <span class="official__time">{{ item.time }}</span>
           <el-divider style="margin-bottom: 0; margin-top: .1rem; border-top: 1px solid #f1f1f1;" />
         </div>
       </div>
@@ -193,49 +189,10 @@ export default {
       }
     }
 
-    const officialList = ref([]) // 通知列表
-    const unreadOfficial = ref(0) // 未读通知总数
-    // 获取私信列表
-    const getOfficialList = async () => {
-      try {
-        console.log('请求了官方')
-        const result = await get('/message/getOfficialList')
-        if (result.code === 200 && result.data) {
-          const list = result.data
-          console.log('官方通知列表', list)
-          // 统计未读官方通知数量
-          // unreadOfficial.value = 0
-          list.forEach(item => {
-            if (item.isUnread) {
-              unreadOfficial.value += 1
-            }
-          })
-          unreadTotal.value += unreadOfficial.value
-          officialList.value = [...list]
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
     onMounted(() => {
       getLetterList()
       getNoticeList()
-      getOfficialList()
+      // getOfficialList()
     })
 
     // 模块切换逻辑
@@ -243,10 +200,8 @@ export default {
       // // 切换到通知模块
       // if (index === 0) {
       //  getNoticeList()
-      // } else if (index === 1) { // 切换到私信模块
+      // } else { // 切换到私信模块
       //  getLetterList()
-      // } else { // 切换到官方模块
-      //  getOfficialList()
       // }
       activeIndex.value = index
     }
@@ -279,8 +234,6 @@ export default {
       unreadLetter,
       noticeList,
       unreadNotice,
-      officialList,
-      unreadOfficial,
       handleTabClick,
       manageIcon,
       handleManageClick,
@@ -357,6 +310,34 @@ export default {
     position: relative;
     top: .5rem;
     .notice{
+      &__header{
+        display: flex;
+        align-items: center;
+        height: .7rem;
+        margin-bottom: .1rem;
+        font-size: .14rem;
+        .icon__wrapper{
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          .like__icon{
+            font-size: .35rem;
+            color: #ff2f00;
+          }
+          .collect__icon{
+            font-size: .35rem;
+            color: #ffa500;
+          }
+          .share__icon{
+            font-size: .35rem;
+            color: #00ccff;
+          }
+          .fans__icon{
+            font-size: .35rem;
+            color: #17d776;
+          }
+        }
+      }
       &__item{
         display: flex;
         padding-top: 0.1rem;
@@ -383,6 +364,11 @@ export default {
               margin-right: .03rem;
             }
             .notice__type{
+              font-size: .14rem;
+              color: $darkgray;
+            }
+            .tips__icon{
+              display: block;
               font-size: .14rem;
               color: $darkgray;
             }

@@ -101,6 +101,8 @@ import 'swiper/modules/navigation/navigation.min.css'
 import 'swiper/modules/pagination/pagination.min.css'
 import 'swiper/modules/scrollbar/scrollbar.min.css'
 
+import moment from 'moment'
+
 const useInitDataEffect = (noteDetail) => {
   const load = ref(true)
 
@@ -183,7 +185,7 @@ const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
   const handleFollowClick = async (followed) => {
     try {
       // 发送修改关注状态的请求
-      const result = await post('/user/changeFollowed', { noteId: noteDetail.value.author.id })
+      const result = await post('/user/changeFollowed', { userId: noteDetail.value.author.id })
       if (result.code === 200) {
         if (!followed) {
           buttonType.value = ''
@@ -223,7 +225,13 @@ const useLikedEffect = (noteDetail, likedIcon) => {
   const handleLikeClick = async (liked) => {
     try {
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', { noteId: noteDetail.value.note.id })
+      const result = await post('/note/changeLiked', {
+        entityType: 1,
+        entityId: noteDetail.value.note.id,
+        entityUserId: noteDetail.value.author.id,
+        noteId: noteDetail.value.note.id
+      })
+      console.log(result)
       if (result.code === 200) {
         if (!liked) {
           likedIcon.value = '&#xe6aa;'
@@ -359,7 +367,12 @@ const useInputEffect = (noteDetail, inputting) => {
   // 发送评论
   const inputValue = ref('')
   const handleSendClick = async () => {
-    const result = await post('/note/sendComment')
+    const result = await post('/note/sendComment', {
+      entityType: 1,
+      entityId: noteDetail.value.note.id,
+      targetId: 0,
+      content: inputValue.value
+    })
     if (result.code === 200) {
       // 获取到发送的评论，以及我的信息
       const myComment = {
@@ -371,7 +384,7 @@ const useInputEffect = (noteDetail, inputting) => {
         commentText: inputValue.value,
         liked: false,
         likeCount: 0,
-        commentTime: new Date()
+        commentTime: moment().format('YYYY-MM-DD HH:mm:ss')
       }
       noteDetail.value.comments.unshift(myComment) // 新增一条评论
       noteDetail.value.commentCount++ // 评论总数增1

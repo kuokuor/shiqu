@@ -13,7 +13,7 @@
         <span
           :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': comment.liked}"
           v-html="icon"
-          @click="handleCommentLikeClick(comment.id, comment.liked)"
+          @click="handleCommentLikeClick(comment.id, comment.user.id, comment.liked)"
         >
         </span>
         <span class="like__count">{{comment.likeCount}}</span>
@@ -33,7 +33,7 @@
           <span
             :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': item?.liked}"
             v-html="replyIcon[index]"
-            @click="handleReplyLikeClick(comment.id, item?.id, index, item?.liked)"
+            @click="handleReplyLikeClick(comment.id, item?.id, item?.user.id, index, item?.liked)"
           >
           </span>
           <span class="like__count">{{item?.likeCount}}</span>
@@ -80,19 +80,22 @@ const useDataEffect = (comment, replyIcon) => {
 }
 
 // 点赞及取消逻辑
-const useLikeEffect = (icon, replyIcon, emit) => {
+const useLikeEffect = (icon, replyIcon, noteId, emit) => {
   // 处理点赞评论的事件
-  const handleCommentLikeClick = async (commentId, liked) => {
+  const handleCommentLikeClick = async (commentId, commentUserId, liked) => {
     try {
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', { commentId: commentId }) // 未修改
+      const result = await post('/note/changeLiked', {
+        entityType: 2,
+        entityId: commentId,
+        entityUserId: commentUserId,
+        noteId: noteId
+      })
       if (result.code === 200) {
         if (!liked) {
-          // liked = true
           icon.value = '&#xe6aa;'
           emit('changeCommentLiked', commentId, null, true, 1)
         } else {
-          // liked = false
           icon.value = '&#xe6a9;'
           emit('changeCommentLiked', commentId, null, false, -1)
         }
@@ -117,10 +120,15 @@ const useLikeEffect = (icon, replyIcon, emit) => {
   }
 
   // 处理点赞回复的事件
-  const handleReplyLikeClick = async (contentId, replyId, index, liked) => {
+  const handleReplyLikeClick = async (contentId, replyId, replyUserId, index, liked) => {
     try {
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', { replyId: replyId })
+      const result = await post('/note/changeLiked', {
+        entityType: 2,
+        entityId: replyId,
+        entityUserId: replyUserId,
+        noteId: noteId
+      })
       if (result.code === 200) {
         if (!liked) {
           // liked = true
@@ -168,14 +176,14 @@ const useUserAvatarEffect = () => {
 
 export default {
   name: 'Comment',
-  props: ['comment'],
+  props: ['comment', 'noteId'],
   setup (props, context) {
     console.log(props.comment)
     const icon = props.comment.liked ? ref('&#xe6aa;') : ref('&#xe6a9;') // 评论的点赞图标
     const replyIcon = ref([]) // 回复列表的点赞图标
 
     const { handleDataInit } = useDataEffect(props.comment, replyIcon)
-    const { handleCommentLikeClick, handleReplyLikeClick } = useLikeEffect(icon, replyIcon, context.emit)
+    const { handleCommentLikeClick, handleReplyLikeClick } = useLikeEffect(icon, replyIcon, props.noteId, context.emit)
     handleDataInit()
 
     const tips = ref(`展开${props.comment.reply?.length}条回复`)

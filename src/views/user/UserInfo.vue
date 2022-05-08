@@ -79,7 +79,7 @@
               :key="item.note.id"
               class="content__wrapper"
             >
-              <contents :notes="item" @changeLiked="changeLiked" />
+              <contents :noteData="item" @changeLiked="changeLiked" />
             </div>
           </div>
           <div v-if="noteList[0].length > 0">
@@ -95,7 +95,7 @@
               :key="item.note.id"
               class="content__wrapper"
             >
-              <contents :notes="item" @changeLiked="changeLiked" />
+              <contents :noteData="item" @changeLiked="changeLiked" />
             </div>
           </div>
           <div v-if="noteList[1].length > 0">
@@ -416,7 +416,7 @@ export default {
     const handleFollowClick = async (userData, followed, count) => {
       try {
         // 发送修改关注状态的请求
-        const result = await post('/user/changeFollowed', { noteId: userData.user.id })
+        const result = await post('/user/changeFollowed', { userId: userData.user.id })
         if (result.code === 200) {
           userData.followed = followed
           if (typeof userData.fansCount === 'number') {

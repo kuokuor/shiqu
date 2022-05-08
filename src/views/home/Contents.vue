@@ -1,26 +1,26 @@
 <template>
   <el-card shadow="never" @click="toNoteDetail">
     <img
-      :src="notes.note.headerImg"
+      :src="noteData.note.headerImg"
       class="image"
     />
     <div class="message">
-      <div class="title">{{notes.note.title}}</div>
+      <div class="title">{{noteData.note.title}}</div>
       <div class="bottom">
         <div class="author">
           <div class="avatar">
-            <el-avatar style="--el-avatar-size: .22rem" :src="notes.author.avatar" />
+            <el-avatar style="--el-avatar-size: .22rem" :src="noteData.author.avatar" />
           </div>
-          <span class="nickname">{{notes.author.nickname}}</span>
+          <span class="nickname">{{noteData.author.nickname}}</span>
         </div>
         <div class="like">
           <span
-            :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': notes.note.liked}"
+            :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': noteData.note.liked}"
             v-html="icon"
-            @click.stop="handleLikeClick(notes.note.id, notes.note.liked)"
+            @click.stop="handleLikeClick(noteData.note.id, noteData.note.liked)"
           >
           </span>
-          <span class="like__count">{{notes.note.likeCount}}</span>
+          <span class="like__count">{{noteData.note.likeCount}}</span>
         </div>
       </div>
     </div>
@@ -34,12 +34,17 @@ import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 
 // 点赞及取消逻辑
-const useLikeEffect = (icon, emit) => {
+const useLikeEffect = (noteData, icon, emit) => {
   // 处理点击点赞图标的事件
   const handleLikeClick = async (noteId, liked) => {
     try {
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', { noteId: noteId })
+      const result = await post('/note/changeLiked', {
+        entityType: 1,
+        entityId: noteData.note.id,
+        entityUserId: noteData.author.id,
+        noteId: noteData.note.id
+      })
       if (result.code === 200) {
         if (!liked) {
           liked = true
@@ -76,15 +81,15 @@ const useLikeEffect = (icon, emit) => {
 
 export default {
   name: 'Contents',
-  props: ['notes'],
+  props: ['noteData'],
   setup (props, context) {
-    const icon = props.notes.note.liked ? ref('&#xe6aa;') : ref('&#xe6a9;')
+    const icon = props.noteData.note.liked ? ref('&#xe6aa;') : ref('&#xe6a9;')
     const { emit } = context
-    const { handleLikeClick } = useLikeEffect(icon, emit)
+    const { handleLikeClick } = useLikeEffect(props.noteData, icon, emit)
     const router = useRouter()
     const toNoteDetail = () => {
-      router.push(`/noteDetail/${props.notes.note.id}`)
-      console.log(props.notes.note.title)
+      router.push(`/noteDetail/${props.noteData.note.id}`)
+      console.log(props.noteData.note.title)
     }
     return {
       icon,

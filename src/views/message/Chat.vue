@@ -11,20 +11,26 @@
         class="msg__wrapper"
       >
         <div class="msg" v-if="item.fromId === myUserId" style="float: right;"> <!-- 我发的消息 -->
-          <div class="user__msg">
-            <span>{{item.content}}</span>
+          <div class="user__wrapper">
+            <div class="user__msg">
+              <span>{{item.content}}</span>
+            </div>
+            <div class="user__header">
+              <el-avatar style="--el-avatar-size: .3rem" :src="myAvatar" />
+            </div>
           </div>
-          <div class="user__header">
-            <el-avatar style="--el-avatar-size: .3rem" :src="myAvatar" />
-          </div>
+          <div class="create__time" style="position: relative; right: .5rem; text-align: right;">{{item.createTime}}</div>
         </div>
         <div class="msg" v-else> <!-- 对方发的 -->
-          <div class="user__header">
-            <el-avatar style="--el-avatar-size: .3rem" :src="targetAvatar" />
+          <div class="user__wrapper">
+            <div class="user__header">
+              <el-avatar style="--el-avatar-size: .3rem" :src="targetAvatar" />
+            </div>
+            <div class="user__msg">
+              <span>{{item.content}}</span>
+            </div>
           </div>
-          <div class="user__msg">
-            <span>{{item.content}}</span>
-          </div>
+          <div class="create__time" style="position: relative; left: .5rem;">{{item.createTime}}</div>
         </div>
       </div>
     </div>
@@ -43,6 +49,7 @@ import { useRoute } from 'vue-router'
 import { get, post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
+import moment from 'moment'
 
 export default {
   name: 'Chat',
@@ -124,7 +131,8 @@ export default {
             id: '',
             fromId: myUserId.value,
             avatar: myAvatar.value,
-            content: contentText.value
+            content: contentText.value,
+            createTime: moment().format('YYYY-MM-DD HH:mm:ss')
           }
           chatList.value.push(newChat)
           nextTick(() => {
@@ -221,20 +229,25 @@ export default {
         clear: both;
       }
       .msg{
-        display: flex;
         margin-top: .2rem;
         max-width: calc(100vw - 0.5rem);
         text-align: left;
-        .user__header{
-          width: .3rem;
-          height: .3rem;
-          margin: 0 0.1rem;
+        .user__wrapper{
+          display: flex;
+          .user__header{
+            width: .3rem;
+            height: .3rem;
+            margin: 0 0.1rem;
+          }
+          .user__msg{
+            padding: .05rem;
+            font-size: .16rem;
+            border-radius: .12rem;
+            background: $bgColor;
+          }
         }
-        .user__msg{
-          padding: .05rem;
-          font-size: .16rem;
-          border-radius: .12rem;
-          background: $bgColor;
+        .create__time{
+          font-size: .12rem;
         }
       }
     }

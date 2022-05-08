@@ -1,9 +1,6 @@
 <template>
   <loading v-if="load" />
   <div class="header">
-    <div class="classify">
-      <a class="iconfont classify__icon">&#xe649;</a>
-    </div>
     <ul class="nav">
       <li class="nav__item" @click="handleTabClick(0)">
         <a :class="{'nav-link': true, 'active': activeIndex === 0}" :tab="activeIndex">关注</a>
@@ -29,7 +26,7 @@
         :key="item.note.id"
         class="content__wrapper"
       >
-        <contents :notes="item" @changeLiked="changeLiked" />
+        <contents :noteData="item" @changeLiked="changeLiked" />
       </div>
     </div>
     <load-more v-if="loadMore" />
@@ -227,8 +224,9 @@ export default {
     }
   }
   .nav{
-    flex: 1;
-    flex-wrap: nowrap;
+    //flex-wrap: nowrap;
+    width: calc(100vw - 1rem);
+    margin-left: 0.5rem;
     &__item{
       flex: 1;
       display: flex;
