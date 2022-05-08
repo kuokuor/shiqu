@@ -397,7 +397,7 @@ export default {
     const handleFollowClick = async (userData, followed, count) => {
       try {
         // 发送修改关注状态的请求
-        const result = await post('/author/changeFollowed', { noteId: userData.user.id })
+        const result = await post('/user/changeFollowed', { noteId: userData.user.id })
         if (result.code === 200) {
           userData.followed = followed
           if (typeof userData.fansCount === 'number') {

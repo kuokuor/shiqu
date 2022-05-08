@@ -113,7 +113,7 @@ const useInitDataEffect = (noteDetail) => {
   const route = useRoute()
   const getNoteDetail = async () => {
     try {
-      const result = await get(`/getNoteDetail/${route.params.id}`)
+      const result = await get(`/note/getNoteDetail/${route.params.id}`)
       if (result.code === 200 && result.data) {
         const detail = result.data
         // 格式化点赞数量
@@ -183,7 +183,7 @@ const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
   const handleFollowClick = async (followed) => {
     try {
       // 发送修改关注状态的请求
-      const result = await post('/author/changeFollowed', { noteId: noteDetail.value.author.id })
+      const result = await post('/user/changeFollowed', { noteId: noteDetail.value.author.id })
       if (result.code === 200) {
         if (!followed) {
           buttonType.value = ''

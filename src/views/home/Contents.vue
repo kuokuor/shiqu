@@ -1,7 +1,7 @@
 <template>
   <el-card shadow="never" @click="toNoteDetail">
     <img
-      :src="notes.images[0]"
+      :src="notes.note.headerImg"
       class="image"
     />
     <div class="message">
