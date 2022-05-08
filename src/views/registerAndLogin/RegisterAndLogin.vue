@@ -239,7 +239,9 @@ const useCodeEffect = (registerFormRef) => {
       if (valid) {
         textBtn() // 验证码倒数60秒
         try {
-          const result = await post('/user/login/sendVerificationCode', { email: email })
+          const formData = new FormData()
+          formData.append('email', email)
+          const result = await post('/user/login/sendVerificationCode', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,
@@ -283,12 +285,11 @@ const useSubmitEffect = (refresh, registerForm, loginForm) => {
     formEl.validate(async (valid) => {
       if (valid) {
         try {
-          const registerData = reactive({
-            email: registerForm.email,
-            password: registerForm.password,
-            code: registerForm.code
-          })
-          const result = await post('/user/register', registerData)
+          const formData = new FormData()
+          formData.append('email', registerForm.email)
+          formData.append('password', registerForm.password)
+          formData.append('code', registerForm.code)
+          const result = await post('/user/register', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,
@@ -328,12 +329,11 @@ const useSubmitEffect = (refresh, registerForm, loginForm) => {
     formEl.validate(async (valid) => {
       if (valid) {
         try {
-          const loginData = reactive({
-            email: loginForm.email,
-            password: loginForm.password,
-            rememberMe: loginForm.rememberMe
-          })
-          const result = await post('/user/login', loginData)
+          const formData = new FormData()
+          formData.append('email', loginForm.email)
+          formData.append('password', loginForm.password)
+          formData.append('rememberMe', loginForm.rememberMe)
+          const result = await post('/user/login', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,

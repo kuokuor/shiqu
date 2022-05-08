@@ -163,7 +163,12 @@ export default {
     // 修改用户信息
     const updateUserInfo = async () => {
       try {
-        const result = await post('/user/updateUserInfo', user)
+        const formData = new FormData()
+        formData.append('nickname', user.value.nickname)
+        formData.append('avatar', user.value.avatar)
+        formData.append('sex', user.value.sex)
+        formData.append('description', user.value.description)
+        const result = await post('/user/updateUserInfo', formData)
         if (result.code === 200) {
           ElMessage({
             showClose: true,

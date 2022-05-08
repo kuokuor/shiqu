@@ -48,7 +48,9 @@ export default {
     const handleTabClick = async () => {
       console.log(activeTabName.value)
       try {
-        const result = await get('/note/classify', activeTabName.value)
+        const formData = new FormData()
+        formData.append('tag', activeTabName.value)
+        const result = await get('/note/classify', formData)
         if (result.code === 200) {
           console.log('该分类下的笔记列表', result.data)
           // 该分类下的笔记列表不为空，对笔记点赞数进行格式化

@@ -64,13 +64,13 @@ const useTabEffect = (load, activeIndex, noteList) => {
   // 获取笔记列表
   const getNoteList = async (index, refresh) => {
     try {
-      console.log('请求了')
-      const result = await get('/note/getNoteList', {
-        userId: 0,
-        activeIndex: index,
-        limit: 10,
-        offset: startCount
-      })
+      const formData = new FormData()
+      formData.append('userId', 0)
+      formData.append('activeIndex', index)
+      formData.append('limit', 10)
+      formData.append('offset', startCount)
+
+      const result = await get('/note/getNoteList', formData)
       if (result.code === 200 && result.data) {
         const list = result.data
         list.forEach((column) => {
