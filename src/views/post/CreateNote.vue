@@ -306,7 +306,7 @@ export default {
         formData.append('content', noteData.content)
         formData.append('type', noteType)
         formData.append('tags', tags)
-        formData.append('images', images)
+        formData.append('photoList', images)
 
         const result = await post('/note/createNote', formData)
         if (result.code === 200) {

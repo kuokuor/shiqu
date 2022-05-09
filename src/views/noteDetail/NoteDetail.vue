@@ -42,7 +42,7 @@
       <div class="comments__total">{{`共${noteDetail.commentCount}条评论`}}</div>
       <!-- 评论列表 -->
       <div v-for="item in noteDetail.comments" :key="item.id">
-        <comment :comment="item" @changeCommentLiked="changeCommentLiked"/>
+        <comment :comment="item" :noteId="noteDetail.note?.id" @changeCommentLiked="changeCommentLiked"/>
       </div>
     </div>
   </div>
@@ -115,7 +115,7 @@ const useInitDataEffect = (noteDetail) => {
   const route = useRoute()
   const getNoteDetail = async () => {
     try {
-      const result = await get(`/note/getNoteDetail/${route.params.id}`)
+      const result = await get(`/note/getNoteDetail/${route.params.noteId}`)
       if (result.code === 200 && result.data) {
         const detail = result.data
         // 格式化点赞数量

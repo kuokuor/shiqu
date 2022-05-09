@@ -14,9 +14,9 @@
       >
         <template #prepend>
           <el-select v-model="type">
-            <el-option label="美食笔记" value="1" />
-            <el-option label="探店笔记" value="2" />
-            <el-option label="全部" value="0" />
+            <el-option label="美食笔记" value="美食笔记" />
+            <el-option label="探店笔记" value="探店笔记" />
+            <el-option label="全部" value="全部" />
           </el-select>
         </template>
       </el-input>
@@ -82,10 +82,17 @@ export default {
     // 获取笔记列表
     const getNoteList = async (refresh) => {
       try {
+        console.log(type)
         const formData = new FormData()
-        formData.append('keyword', searchText)
-        formData.append('type', type.value)
-        formData.append('current', currentPage.value)
+        formData.append('keyword', searchText.value)
+        if (type.value === '全部') {
+          formData.append('type', 0)
+        } else if (type.value === '美食笔记') {
+          formData.append('type', 1)
+        } else {
+          formData.append('type', 2)
+        }
+        formData.append('current', currentPage.value - 1)
         formData.append('limit', 20)
 
         const result = await post('/note/search', formData)
