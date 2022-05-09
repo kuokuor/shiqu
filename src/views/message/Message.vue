@@ -67,13 +67,13 @@
     </div>
     <span class="noMore">没有更多啦~</span>
   </div>
-  <docker :currentIndex="3" :unreadTotal="unreadTotal"/>
+  <docker :currentIndex="3"/>
 </template>
 
 <script>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { get, post } from '../../utils/request'
+import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import Docker from '../../components/Docker.vue'
 
@@ -102,6 +102,8 @@ export default {
     const toFansNotice = () => {
       router.push('/followNotice')
     }
+
+    const unreadNotice = ref(0) // 未读通知总数
 
     const letterList = ref([]) // 私信列表
     const unreadLetter = ref(0) // 未读私信总数
@@ -140,49 +142,8 @@ export default {
       }
     }
 
-    const noticeList = ref([]) // 通知列表
-    const unreadNotice = ref(0) // 未读通知总数
-    // 获取通知列表
-    const getNoticeList = async () => {
-      try {
-        console.log('请求了通知')
-        const result = await post('/message/getNoticeList')
-        if (result.code === 200 && result.data) {
-          const list = result.data
-          console.log('通知列表', list)
-          // 统计未读通知数量
-          // unreadNotice.value = 0
-          list.forEach(item => {
-            if (item.isUnread) {
-              unreadNotice.value += 1
-            }
-          })
-          unreadTotal.value += unreadNotice.value
-          noticeList.value = [...list]
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
     onMounted(() => {
       getLetterList()
-      getNoticeList()
-      // getOfficialList()
     })
 
     const manageIcon = ref('&#xe70c;')
@@ -213,7 +174,6 @@ export default {
       toFansNotice,
       letterList,
       unreadLetter,
-      noticeList,
       unreadNotice,
       manageIcon,
       handleManageClick,

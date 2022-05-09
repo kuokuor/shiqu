@@ -68,7 +68,7 @@ const useTabEffect = (load, activeIndex, noteList) => {
       formData.append('userId', 0)
       formData.append('index', index)
       formData.append('limit', 10)
-      formData.append('offset', startCount)
+      formData.append('offset', startCount.value)
 
       const result = await post('/note/getNoteList', formData)
       if (result.code === 200 && result.data) {

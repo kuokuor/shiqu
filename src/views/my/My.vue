@@ -262,7 +262,8 @@ const useNoteListEffect = (route, loadMore, noMore, noteList) => {
       const formData = new FormData()
       formData.append('userId', route.params.userId)
       formData.append('limit', 10)
-      formData.append('offset', startCount)
+      formData.append('offset', startCount.value)
+      formData.append('index', 2)
 
       const result = await post('/note/getNoteList', formData)
       if (result.code === 200) {
@@ -324,7 +325,7 @@ const useCollectedNoteListEffect = (route, loadMore, noMore, noteList) => {
       const formData = new FormData()
       formData.append('userId', route.params.userId)
       formData.append('limit', 10)
-      formData.append('offset', startCount)
+      formData.append('offset', startCount.value)
 
       const result = await post('/user/getCollectedNoteList', formData)
       if (result.code === 200) {
