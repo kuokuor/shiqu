@@ -84,13 +84,13 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
   // 处理点赞评论的事件
   const handleCommentLikeClick = async (commentId, commentUserId, liked) => {
     try {
+      const formData = new FormData()
+      formData.append('entityType', 2)
+      formData.append('entityId', commentId)
+      formData.append('entityUserId', commentUserId)
+      formData.append('noteId', noteId)
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', {
-        entityType: 2,
-        entityId: commentId,
-        entityUserId: commentUserId,
-        noteId: noteId
-      })
+      const result = await post('/note/changeLiked', formData)
       if (result.code === 200) {
         if (!liked) {
           icon.value = '&#xe6aa;'
@@ -122,13 +122,13 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
   // 处理点赞回复的事件
   const handleReplyLikeClick = async (contentId, replyId, replyUserId, index, liked) => {
     try {
+      const formData = new FormData()
+      formData.append('entityType', 2)
+      formData.append('entityId', replyId)
+      formData.append('entityUserId', replyUserId)
+      formData.append('noteId', noteId)
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', {
-        entityType: 2,
-        entityId: replyId,
-        entityUserId: replyUserId,
-        noteId: noteId
-      })
+      const result = await post('/note/changeLiked', formData)
       if (result.code === 200) {
         if (!liked) {
           // liked = true

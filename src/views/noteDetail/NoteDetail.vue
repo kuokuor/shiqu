@@ -184,8 +184,10 @@ const useInitDataEffect = (noteDetail) => {
 const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
   const handleFollowClick = async (followed) => {
     try {
+      const formData = new FormData()
+      formData.append('userId', noteDetail.value.author.id)
       // 发送修改关注状态的请求
-      const result = await post('/user/changeFollowed', { userId: noteDetail.value.author.id })
+      const result = await post('/user/changeFollowed', formData)
       if (result.code === 200) {
         if (!followed) {
           buttonType.value = ''
@@ -224,13 +226,13 @@ const useLikedEffect = (noteDetail, likedIcon) => {
   // 对笔记进行点赞取消
   const handleLikeClick = async (liked) => {
     try {
+      const formData = new FormData()
+      formData.append('entityType', 1)
+      formData.append('entityId', noteDetail.value.note.id)
+      formData.append('entityUserId', noteDetail.value.author.id)
+      formData.append('noteId', noteDetail.value.note.id)
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', {
-        entityType: 1,
-        entityId: noteDetail.value.note.id,
-        entityUserId: noteDetail.value.author.id,
-        noteId: noteDetail.value.note.id
-      })
+      const result = await post('/note/changeLiked', formData)
       console.log(result)
       if (result.code === 200) {
         if (!liked) {
@@ -274,8 +276,10 @@ const useCollectedEffect = (noteDetail, collectedIcon) => {
   // 对笔记进行收藏取消
   const handleCollectClick = async (collected) => {
     try {
+      const formData = new FormData()
+      formData.append('noteId', noteDetail.value.note.id)
       // 发送修改收藏状态的请求
-      const result = await post('/note/changeCollected', { noteId: noteDetail.value.note.id })
+      const result = await post('/note/changeCollected', formData)
       if (result.code === 200) {
         if (!collected) {
           collectedIcon.value = '&#xe64d;'
@@ -367,30 +371,48 @@ const useInputEffect = (noteDetail, inputting) => {
   // 发送评论
   const inputValue = ref('')
   const handleSendClick = async () => {
-    const result = await post('/note/sendComment', {
-      entityType: 1,
-      entityId: noteDetail.value.note.id,
-      targetId: 0,
-      content: inputValue.value
-    })
-    if (result.code === 200) {
-      // 获取到发送的评论，以及我的信息
-      const myComment = {
-        user: {
-          id: '1',
-          nickname: '我的昵称',
-          avatar: ''
-        },
-        commentText: inputValue.value,
-        liked: false,
-        likeCount: 0,
-        commentTime: moment().format('YYYY-MM-DD HH:mm:ss')
+    try {
+      const formData = new FormData()
+      formData.append('entityType', 1)
+      formData.append('entityId', noteDetail.value.note.id)
+      formData.append('targetId', 0)
+      formData.append('content', inputValue.value)
+      const result = await post('/note/sendComment', formData)
+      if (result.code === 200) {
+        // 获取到发送的评论，以及我的信息
+        const myComment = {
+          user: {
+            id: '1',
+            nickname: '我的昵称',
+            avatar: ''
+          },
+          commentText: inputValue.value,
+          liked: false,
+          likeCount: 0,
+          commentTime: moment().format('YYYY-MM-DD HH:mm:ss')
+        }
+        noteDetail.value.comments.unshift(myComment) // 新增一条评论
+        noteDetail.value.commentCount++ // 评论总数增1
+        console.log('更新后的笔记详情', noteDetail.value)
+        inputValue.value = '' // 清空输入框内容
+        inputting.value = false // 发送完评论后收起输入框
+      } else {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
       }
-      noteDetail.value.comments.unshift(myComment) // 新增一条评论
-      noteDetail.value.commentCount++ // 评论总数增1
-      console.log('更新后的笔记详情', noteDetail.value)
-      inputValue.value = '' // 清空输入框内容
-      inputting.value = false // 发送完评论后收起输入框
+    } catch (e) {
+      ElMessage({
+        showClose: true,
+        message: '发生错误',
+        type: 'error',
+        center: true,
+        duration: 1000
+      })
     }
   }
   return {

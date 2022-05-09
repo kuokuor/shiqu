@@ -216,7 +216,10 @@ const useUserInfoEffect = () => {
   const route = useRoute()
   const getUserInfo = async () => {
     try {
-      const result = await get('/user/getUserInfo', { userId: route.params.userId })
+      const formData = new FormData()
+      formData.append('userId', route.params.userId)
+
+      const result = await post('/user/getUserInfo', formData)
       if (result.code === 200 && result.data) {
         const userData = result.data
         userData.likeCount = handleCountShow(userData.likeCount)
@@ -256,12 +259,13 @@ const useNoteListEffect = (route, loadMore, noMore, noteList) => {
     loadMore.value = true
     noMore.value = false
     try {
-      console.log('请求了')
-      const result = await get('/note/getNoteList', {
-        userId: route.params.userId,
-        limit: 10,
-        offset: startCount
-      })
+      const formData = new FormData()
+      formData.append('userId', route.params.userId)
+      formData.append('limit', 10)
+      formData.append('offset', startCount.value)
+      formData.append('index', 2)
+
+      const result = await post('/note/getNoteList', formData)
       if (result.code === 200) {
         const list = result.data
         console.log(list)
@@ -318,12 +322,12 @@ const useCollectedNoteListEffect = (route, loadMore, noMore, noteList) => {
     loadMore.value = true
     noMore.value = false
     try {
-      console.log('请求了')
-      const result = await get('/user/getCollectedNoteList', {
-        userId: route.params.userId,
-        limit: 10,
-        offset: startCount
-      })
+      const formData = new FormData()
+      formData.append('userId', route.params.userId)
+      formData.append('limit', 10)
+      formData.append('offset', startCount.value)
+
+      const result = await post('/user/getCollectedNoteList', formData)
       if (result.code === 200) {
         const list = result.data
         console.log(list)
@@ -395,8 +399,10 @@ export default {
     // 关注
     const handleFollowClick = async (userData, followed, count) => {
       try {
+        const formData = new FormData()
+        formData.append('userId', userData.user.id)
         // 发送修改关注状态的请求
-        const result = await post('/user/changeFollowed', { userId: userData.user.id })
+        const result = await post('/user/changeFollowed', formData)
         if (result.code === 200) {
           userData.followed = followed
           if (typeof userData.fansCount === 'number') {
@@ -428,7 +434,10 @@ export default {
       console.log('显示关注列表')
       followDrawer.value = true
       try {
-        const result = await get('/user/getFollowList', { userId: userInfo.value.user.id })
+        const formData = new FormData()
+        formData.append('userId', userInfo.value.user.id)
+
+        const result = await post('/user/getFollowList', formData)
         if (result.code === 200) {
           console.log('关注列表', result.data)
           followList.value = result.data
@@ -458,7 +467,10 @@ export default {
       console.log('显示粉丝列表')
       fansDrawer.value = true
       try {
-        const result = await get('/user/getFansList', { userId: userInfo.value.user.id })
+        const formData = new FormData()
+        formData.append('userId', userInfo.value.user.id)
+
+        const result = await post('/user/getFansList', formData)
         if (result.code === 200) {
           console.log('粉丝列表', result.data)
           fansList.value = result.data

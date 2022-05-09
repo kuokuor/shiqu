@@ -167,7 +167,9 @@ const useCodeEffect = (resetFormRef) => {
       if (valid) {
         textBtn() // 验证码倒数60秒
         try {
-          const result = await post('/user/login/sendVerificationCode', { email: email })
+          const formData = new FormData()
+          formData.append('email', email)
+          const result = await post('/user/login/sendVerificationCode', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,
@@ -211,12 +213,11 @@ const useSubmitEffect = (resetForm) => {
     formEl.validate(async (valid) => {
       if (valid) {
         try {
-          const resetData = reactive({
-            email: resetForm.email,
-            password: resetForm.password,
-            code: resetForm.code
-          })
-          const result = await post('/user/resetPass', resetData)
+          const formData = new FormData()
+          formData.append('email', resetForm.email)
+          formData.append('password', resetForm.password)
+          formData.append('code', resetForm.code)
+          const result = await post('/user/resetPass', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,

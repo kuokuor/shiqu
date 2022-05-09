@@ -1,6 +1,7 @@
 <template>
   <div class="header">
-    <ul class="nav">
+    消息
+    <!--<ul class="nav">
       <li class="nav__item" @click="handleTabClick(0)">
         <el-badge :value="unreadNotice" :max="99" :hidden="unreadNotice === 0">
           <span :class="{'nav-link': true, 'active': activeIndex === 0}" :tab="activeIndex">通知</span>
@@ -16,58 +17,30 @@
     </ul>
     <div class="manage">
       <span class="iconfont manage__icon" @click="handleManageClick" v-html="manageIcon"></span>
-    </div>
+    </div>-->
   </div>
   <div class="main">
-    <div class="notice" v-show="activeIndex === 0">
+    <div class="notice">
       <div class="notice__header">
         <div class="icon__wrapper">
-          <span class="iconfont like__icon">&#xe610;</span>
+          <span class="iconfont like__icon" @click="toLikeNotice">&#xe610;</span>
           <span>点赞</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont collect__icon">&#xe60b;</span>
+          <span class="iconfont collect__icon" @click="toCollectNotice">&#xe60b;</span>
           <span>收藏</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont share__icon">&#xe62c;</span>
-          <span>分享</span>
+          <span class="iconfont share__icon" @click="toCommentNotice">&#xe62c;</span>
+          <span>评论/回复</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont fans__icon">&#xe6d8;</span>
+          <span class="iconfont fans__icon" @click="toFansNotice">&#xe6d8;</span>
           <span>粉丝</span>
         </div>
       </div>
-      <el-empty description="还没有任何通知哟~" v-if="!noticeList || !noticeList.length" />
-      <div v-for="item in noticeList" :key="item.id" class="notice__item">
-        <span class="notice__avatar">
-          <el-badge is-dot :hidden="item.isUnread === false">
-            <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" />
-          </el-badge>
-        </span>
-        <div class="notice__wrapper">
-          <div class="notice__middle">
-            <div>
-              <span class="notice__nickname">{{ item.from.nickname }}</span>
-              <span class="notice__type" v-if="item.type === 0">赞了你</span>
-              <span class="notice__type" v-else-if="item.type === 1">评论了你：</span>
-              <span class="notice__type" v-else-if="item.type === 2">回复了你：</span>
-              <span class="notice__type" v-else-if="item.type === 3">收藏了你的笔记</span>
-              <span class="notice__type" v-else-if="item.type === 4">分享了你的笔记</span>
-            </div>
-            <span class="iconfont tips__icon" v-if="item.type === 0">&#xe6aa; +1</span>
-            <span class="notice__content" v-else-if="item.type === 1 || item.type === 2">{{ item.notice.content }}</span>
-            <span class="iconfont tips__icon" v-else-if="item.type === 3">&#xe64d; +1</span>
-            <span class="iconfont tips__icon" v-else-if="item.type === 4">&#xe679; +1</span>
-            <span class="notice__time">{{item.notice.time}}</span>
-          </div>
-          <div class="notice__right">
-            <span class="notice__target">{{item.notice.target}}</span>
-          </div>
-        </div>
-      </div>
     </div>
-    <div class="letter" v-show="activeIndex === 1">
+    <div class="letter">
       <el-empty description="网络一线牵，主动才有缘~" v-if="!letterList || !letterList.length" />
       <div v-for="item in letterList" :key="item.id" class="letter__item" @click="toChat(item.from.id)">
         <span class="letter__avatar">
@@ -94,7 +67,7 @@
     </div>
     <span class="noMore">没有更多啦~</span>
   </div>
-  <docker :currentIndex="3" :unreadTotal="unreadTotal"/>
+  <docker :currentIndex="3"/>
 </template>
 
 <script>
@@ -110,8 +83,27 @@ export default {
     Docker
   },
   setup () {
-    const activeIndex = ref(1) // 被选中的模块
     const unreadTotal = ref(0) // 未读消息总数
+
+    const router = useRouter()
+
+    const toLikeNotice = () => {
+      router.push('/likeNotice')
+    }
+
+    const toCollectNotice = () => {
+      router.push('/collectNotice')
+    }
+
+    const toCommentNotice = () => {
+      router.push('/commentNotice')
+    }
+
+    const toFansNotice = () => {
+      router.push('/followNotice')
+    }
+
+    const unreadNotice = ref(0) // 未读通知总数
 
     const letterList = ref([]) // 私信列表
     const unreadLetter = ref(0) // 未读私信总数
@@ -150,61 +142,9 @@ export default {
       }
     }
 
-    const noticeList = ref([]) // 通知列表
-    const unreadNotice = ref(0) // 未读通知总数
-    // 获取通知列表
-    const getNoticeList = async () => {
-      try {
-        console.log('请求了通知')
-        const result = await get('/message/getNoticeList')
-        if (result.code === 200 && result.data) {
-          const list = result.data
-          console.log('通知列表', list)
-          // 统计未读通知数量
-          // unreadNotice.value = 0
-          list.forEach(item => {
-            if (item.isUnread) {
-              unreadNotice.value += 1
-            }
-          })
-          unreadTotal.value += unreadNotice.value
-          noticeList.value = [...list]
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
-        }
-      } catch (e) {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
-      }
-    }
-
     onMounted(() => {
       getLetterList()
-      getNoticeList()
-      // getOfficialList()
     })
-
-    // 模块切换逻辑
-    const handleTabClick = (index) => {
-      // // 切换到通知模块
-      // if (index === 0) {
-      //  getNoticeList()
-      // } else { // 切换到私信模块
-      //  getLetterList()
-      // }
-      activeIndex.value = index
-    }
 
     const manageIcon = ref('&#xe70c;')
     const handleManageClick = () => {
@@ -215,7 +155,6 @@ export default {
       }
     }
 
-    const router = useRouter()
     const toChat = (targetId) => {
       // 将当前点击的私信未读数量置为0（可删除，后台会有相应操作）
       // letterList.value.forEach((item) => {
@@ -228,13 +167,14 @@ export default {
     }
 
     return {
-      activeIndex,
       unreadTotal,
+      toLikeNotice,
+      toCollectNotice,
+      toCommentNotice,
+      toFansNotice,
       letterList,
       unreadLetter,
-      noticeList,
       unreadNotice,
-      handleTabClick,
       manageIcon,
       handleManageClick,
       toChat
@@ -247,62 +187,65 @@ export default {
 @import '../../style/viriables.scss';
 @import '../../style/mixins.scss';
   .header{
-    display: flex;
+    //display: flex;
     width: 100%;
     height: .5rem;
+    line-height: .5rem;
     position: fixed;
     top: 0;
     z-index: 2;
     margin: 0;
     padding: 0;
+    font-size: .16rem;
+    border-bottom: 0.01rem solid $content-bgColor;
     background: $bgColor;
-    .manage{
-      width: .5rem;
-      &__icon{
-        position: relative;
-        top: .08rem;
-        right: .04rem;
-        font-size: .24rem;
-        text-decoration: none;
-        color: $textColor;
-      }
-    }
+    //.manage{
+    //  width: .5rem;
+    //  &__icon{
+    //    position: relative;
+    //    top: .08rem;
+    //    right: .04rem;
+    //    font-size: .24rem;
+    //    text-decoration: none;
+    //    color: $textColor;
+    //  }
+    //}
   }
-  .nav{
-    flex: 1;
-    flex-wrap: nowrap;
-    margin-left: .5rem;
-    &__item{
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      :deep(sup){
-        top: .1rem;
-        right: .05rem;
-      }
-      .nav-link{
-        line-height: .4rem;
-        //margin-top: .04rem;
-        padding: 0;
-        font-size: .16rem;
-        color: $textColor;
-      }
-      .active{
-        font-weight: bolder;
-        color: $themeColor;
-        margin: 0;
-      }
-      .line{
-        width: .2rem;
-        height: .04rem;
-        margin-top: -.04rem;
-        background: $themeColor;
-        border-radius: .05rem;
-      }
-    }
-  }
+  //.nav{
+  //  flex: 1;
+  //  flex-wrap: nowrap;
+  //  margin-left: .5rem;
+  //  &__item{
+  //    flex: 1;
+  //    display: flex;
+  //    flex-direction: column;
+  //    justify-content: center;
+  //    align-items: center;
+  //    :deep(sup){
+  //      top: .1rem;
+  //      right: .05rem;
+  //    }
+  //    .nav-link{
+  //      line-height: .4rem;
+  //      //margin-top: .04rem;
+  //      padding: 0;
+  //      font-size: .16rem;
+  //      color: $textColor;
+  //    }
+  //    .active{
+  //      font-weight: bolder;
+  //      color: $themeColor;
+  //      margin: 0;
+  //    }
+  //    .line{
+  //      width: .2rem;
+  //      height: .04rem;
+  //      margin-top: -.04rem;
+  //      background: $themeColor;
+  //      border-radius: .05rem;
+  //    }
+  //  }
+  //}
   .main{
     width: 100%;
     height: calc(100vh - 1rem);
@@ -310,11 +253,11 @@ export default {
     position: relative;
     top: .5rem;
     .notice{
+      height: .7rem;
+      margin-bottom: .1rem;
       &__header{
         display: flex;
         align-items: center;
-        height: .7rem;
-        margin-bottom: .1rem;
         font-size: .14rem;
         .icon__wrapper{
           flex: 1;
@@ -338,63 +281,63 @@ export default {
           }
         }
       }
-      &__item{
-        display: flex;
-        padding-top: 0.1rem;
-        .notice__avatar{
-          margin: 0 .15rem;
-          :deep(sup){
-            right: .5rem;
-          }
-        }
-        .notice__wrapper{
-          flex: 1;
-          display: flex;
-          margin-right: .1rem;
-          padding-bottom: .05rem;
-          border-bottom: 1px solid $content-bgColor;
-          overflow: hidden;
-          .notice__middle{
-            flex: 1;
-            text-align: left;
-            overflow: hidden;
-            .notice__nickname{
-              font-size: .14rem;
-              color: $textColor;
-              margin-right: .03rem;
-            }
-            .notice__type{
-              font-size: .14rem;
-              color: $darkgray;
-            }
-            .tips__icon{
-              display: block;
-              font-size: .14rem;
-              color: $darkgray;
-            }
-            .notice__content{
-              margin: .02rem 0;
-              font-size: .12rem;
-              color: $darkgray;
-              display: inline-block;
-              max-width: 100%;
-              @include two-ellipsis;
-            }
-            .notice__time{
-              font-size: .12rem;
-              color: $darkgray;
-            }
-          }
-          .notice__right{
-            width: .55rem;
-            height: .55rem;
-            margin-left: .1rem;
-            color: $darkgray;
-            background: $content-bgColor;
-            @include three-ellipsis;
-          }
-        }
-      }
+      //&__item{
+      //  display: flex;
+      //  padding-top: 0.1rem;
+      //  .notice__avatar{
+      //    margin: 0 .15rem;
+      //    :deep(sup){
+      //      right: .5rem;
+      //    }
+      //  }
+      //  .notice__wrapper{
+      //    flex: 1;
+      //    display: flex;
+      //    margin-right: .1rem;
+      //    padding-bottom: .05rem;
+      //    border-bottom: 1px solid $content-bgColor;
+      //    overflow: hidden;
+      //    .notice__middle{
+      //      flex: 1;
+      //      text-align: left;
+      //      overflow: hidden;
+      //      .notice__nickname{
+      //        font-size: .14rem;
+      //        color: $textColor;
+      //        margin-right: .03rem;
+      //      }
+      //      .notice__type{
+      //        font-size: .14rem;
+      //        color: $darkgray;
+      //      }
+      //      .tips__icon{
+      //        display: block;
+      //        font-size: .14rem;
+      //        color: $darkgray;
+      //      }
+      //      .notice__content{
+      //        margin: .02rem 0;
+      //        font-size: .12rem;
+      //        color: $darkgray;
+      //        display: inline-block;
+      //        max-width: 100%;
+      //        @include two-ellipsis;
+      //      }
+      //      .notice__time{
+      //        font-size: .12rem;
+      //        color: $darkgray;
+      //      }
+      //    }
+      //    .notice__right{
+      //      width: .55rem;
+      //      height: .55rem;
+      //      margin-left: .1rem;
+      //      color: $darkgray;
+      //      background: $content-bgColor;
+      //      @include three-ellipsis;
+      //    }
+      //  }
+      //}
     }
     .letter{
       &__item{
@@ -447,38 +390,38 @@ export default {
         }
       }
     }
-    .official{
-      &__item{
-        display: flex;
-        padding-top: 0.1rem;
-        .official__avatar{
-          margin: 0 .15rem;
-          :deep(sup){
-            right: .5rem;
-          }
-        }
-        .official__right{
-          flex: 1;
-          overflow: hidden;
-          text-align: left;
-          .title__wrapper{
-            @include ellipsis;
-            .official__type{
-              font-size: .14rem;
-              color: $textColor;
-            }
-            .official__title{
-              font-size: .14rem;
-              color: $darkgray;
-            }
-          }
-          .official__time{
-            font-size: .12rem;
-            color: $darkgray;
-          }
-        }
-      }
-    }
+    //.official{
+    //  &__item{
+    //    display: flex;
+    //    padding-top: 0.1rem;
+    //    .official__avatar{
+    //      margin: 0 .15rem;
+    //      :deep(sup){
+    //        right: .5rem;
+    //      }
+    //    }
+    //    .official__right{
+    //      flex: 1;
+    //      overflow: hidden;
+    //      text-align: left;
+    //      .title__wrapper{
+    //        @include ellipsis;
+    //        .official__type{
+    //          font-size: .14rem;
+    //          color: $textColor;
+    //        }
+    //        .official__title{
+    //          font-size: .14rem;
+    //          color: $darkgray;
+    //        }
+    //      }
+    //      .official__time{
+    //        font-size: .12rem;
+    //        color: $darkgray;
+    //      }
+    //    }
+    //  }
+    //}
     .noMore{
       display: inline-block;
       margin: 0.15rem 0;

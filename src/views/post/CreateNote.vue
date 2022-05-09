@@ -308,15 +308,7 @@ export default {
         formData.append('tags', tags)
         formData.append('images', images)
 
-        const data = {
-          title: noteData.title,
-          content: noteData.content,
-          type: noteType,
-          tags: tags,
-          images: images
-        }
-        console.log('要上传的数据', data)
-        const result = await post('/note/createNote', data)
+        const result = await post('/note/createNote', formData)
         if (result.code === 200) {
           localStorage.removeItem('savedNote') // 移除localStorage中上一次保存的笔记内容
           ElMessage({

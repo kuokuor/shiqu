@@ -43,7 +43,7 @@
 
 <script>
 import { ref } from 'vue'
-import { get } from '../../utils/request'
+import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
@@ -82,12 +82,13 @@ export default {
     // 获取笔记列表
     const getNoteList = async (refresh) => {
       try {
-        const result = await get('/note/search', {
-          keyword: searchText,
-          type: type.value,
-          current: currentPage.value,
-          limit: 20
-        })
+        const formData = new FormData()
+        formData.append('keyword', searchText)
+        formData.append('type', type.value)
+        formData.append('current', currentPage.value)
+        formData.append('limit', 20)
+
+        const result = await post('/note/search', formData)
         if (result.code === 200 && result.data) {
           const list = result.data
           list.forEach((column) => {

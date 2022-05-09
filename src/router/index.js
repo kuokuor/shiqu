@@ -33,8 +33,40 @@ const routes = [
       keepAlive: true // 需要缓存
     }
   },
-  { // 私信
-    path: '/chat/:userId',
+  { // 点赞通知
+    path: '/likeNotice',
+    name: 'LikeNotice',
+    component: () => import(/* webpackChunkName: "likeNotice" */ '../views/message/LikeNotice.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 收藏通知
+    path: '/collectNotice',
+    name: 'CollectNotice',
+    component: () => import(/* webpackChunkName: "collectNotice" */ '../views/message/CollectNotice.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 评论回复通知
+    path: '/commentNotice',
+    name: 'CommentNotice',
+    component: () => import(/* webpackChunkName: "commentNotice" */ '../views/message/CommentNotice.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 关注通知
+    path: '/followNotice',
+    name: 'FollowNotice',
+    component: () => import(/* webpackChunkName: "fansNotice" */ '../views/message/FollowNotice.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 私信聊天
+    path: '/chat/:targetId',
     name: 'Chat',
     component: () => import(/* webpackChunkName: "chat" */ '../views/message/Chat.vue'),
     meta: {
@@ -96,6 +128,14 @@ const routes = [
     path: '/editInfo',
     name: 'EditInfo',
     component: () => import(/* webpackChunkName: "editInfo" */ '../views/user/EditInfo.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
+  { // 后台管理系统
+    path: '/managementHome',
+    name: 'ManagementHome',
+    component: () => import(/* webpackChunkName: "managementHome" */ '../views/management/ManagementHome.vue'),
     meta: {
       keepAlive: false // 不需要缓存
     }

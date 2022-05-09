@@ -38,13 +38,13 @@ const useLikeEffect = (noteData, icon, emit) => {
   // 处理点击点赞图标的事件
   const handleLikeClick = async (noteId, liked) => {
     try {
+      const formData = new FormData()
+      formData.append('entityType', 1)
+      formData.append('entityId', noteData.note.id)
+      formData.append('entityUserId', noteData.author.id)
+      formData.append('noteId', noteData.note.id)
       // 发送修改点赞状态的请求
-      const result = await post('/note/changeLiked', {
-        entityType: 1,
-        entityId: noteData.note.id,
-        entityUserId: noteData.author.id,
-        noteId: noteData.note.id
-      })
+      const result = await post('/note/changeLiked', formData)
       if (result.code === 200) {
         if (!liked) {
           liked = true
