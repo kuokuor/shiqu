@@ -23,7 +23,7 @@
 
 <script>
 import { onMounted, ref } from 'vue'
-import { get } from '../../utils/request'
+import { post } from '../../utils/request'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
 import { ElMessage } from 'element-plus'
 import Contents from '../home/Contents.vue'
@@ -50,7 +50,7 @@ export default {
       try {
         const formData = new FormData()
         formData.append('tag', activeTabName.value)
-        const result = await get('/note/classify', formData)
+        const result = await post('/note/classify', formData)
         if (result.code === 200) {
           console.log('该分类下的笔记列表', result.data)
           // 该分类下的笔记列表不为空，对笔记点赞数进行格式化

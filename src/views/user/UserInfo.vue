@@ -231,7 +231,7 @@ const useUserInfoEffect = () => {
     try {
       const formData = new FormData()
       formData.append('userId', route.params.userId)
-      const result = await get('/user/getUserInfo', formData)
+      const result = await post('/user/getUserInfo', formData)
       if (result.code === 200 && result.data) {
         const userData = result.data
         userData.likeCount = handleCountShow(userData.likeCount)
@@ -276,7 +276,7 @@ const useNoteListEffect = (route, loadMore, noMore, noteList) => {
       formData.append('limit', 10)
       formData.append('offset', startCount)
 
-      const result = await get('/note/getNoteList', formData)
+      const result = await post('/note/getNoteList', formData)
       if (result.code === 200) {
         const list = result.data
         console.log(list)
@@ -337,7 +337,7 @@ const useCollectedNoteListEffect = (route, loadMore, noMore, noteList) => {
       formData.append('userId', route.params.userId)
       formData.append('limit', 10)
       formData.append('offset', startCount)
-      const result = await get('/user/getCollectedNoteList', formData)
+      const result = await post('/user/getCollectedNoteList', formData)
       if (result.code === 200) {
         const list = result.data
         console.log(list)
@@ -453,7 +453,7 @@ export default {
       try {
         const formData = new FormData()
         formData.append('userId', userInfo.value.user.id)
-        const result = await get('/user/getFollowList', formData)
+        const result = await post('/user/getFollowList', formData)
         if (result.code === 200) {
           console.log('关注列表', result.data)
           followList.value = result.data
@@ -485,7 +485,7 @@ export default {
       try {
         const formData = new FormData()
         formData.append('userId', userInfo.value.user.id)
-        const result = await get('/user/getFansList', formData)
+        const result = await post('/user/getFansList', formData)
         if (result.code === 200) {
           console.log('粉丝列表', result.data)
           fansList.value = result.data

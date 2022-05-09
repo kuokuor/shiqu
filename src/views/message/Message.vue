@@ -23,19 +23,19 @@
     <div class="notice">
       <div class="notice__header">
         <div class="icon__wrapper">
-          <span class="iconfont like__icon">&#xe610;</span>
+          <span class="iconfont like__icon" @click="toLikeNotice">&#xe610;</span>
           <span>点赞</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont collect__icon">&#xe60b;</span>
+          <span class="iconfont collect__icon" @click="toCollectNotice">&#xe60b;</span>
           <span>收藏</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont share__icon">&#xe62c;</span>
-          <span>分享</span>
+          <span class="iconfont share__icon" @click="toCommentNotice">&#xe62c;</span>
+          <span>评论/回复</span>
         </div>
         <div class="icon__wrapper">
-          <span class="iconfont fans__icon">&#xe6d8;</span>
+          <span class="iconfont fans__icon" @click="toFansNotice">&#xe6d8;</span>
           <span>粉丝</span>
         </div>
       </div>
@@ -73,7 +73,7 @@
 <script>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { get } from '../../utils/request'
+import { get, post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import Docker from '../../components/Docker.vue'
 
@@ -84,6 +84,24 @@ export default {
   },
   setup () {
     const unreadTotal = ref(0) // 未读消息总数
+
+    const router = useRouter()
+
+    const toLikeNotice = () => {
+      router.push('/likeNotice')
+    }
+
+    const toCollectNotice = () => {
+      router.push('/collectNotice')
+    }
+
+    const toCommentNotice = () => {
+      router.push('/commentNotice')
+    }
+
+    const toFansNotice = () => {
+      router.push('/followNotice')
+    }
 
     const letterList = ref([]) // 私信列表
     const unreadLetter = ref(0) // 未读私信总数
@@ -128,7 +146,7 @@ export default {
     const getNoticeList = async () => {
       try {
         console.log('请求了通知')
-        const result = await get('/message/getNoticeList')
+        const result = await post('/message/getNoticeList')
         if (result.code === 200 && result.data) {
           const list = result.data
           console.log('通知列表', list)
@@ -176,7 +194,6 @@ export default {
       }
     }
 
-    const router = useRouter()
     const toChat = (targetId) => {
       // 将当前点击的私信未读数量置为0（可删除，后台会有相应操作）
       // letterList.value.forEach((item) => {
@@ -190,6 +207,10 @@ export default {
 
     return {
       unreadTotal,
+      toLikeNotice,
+      toCollectNotice,
+      toCommentNotice,
+      toFansNotice,
       letterList,
       unreadLetter,
       noticeList,

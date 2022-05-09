@@ -46,7 +46,7 @@
 <script>
 import { nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { get, post } from '../../utils/request'
+import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
 import moment from 'moment'
@@ -73,7 +73,7 @@ export default {
         const formData = new FormData()
         formData.append('targetId', targetId)
         console.log('请求了聊天记录')
-        const result = await get('/message/getChatList', formData)
+        const result = await post('/message/getChatList', formData)
         if (result.code === 200 && result.data) {
           targetNickname.value = result.data.target.nickname
           targetAvatar.value = result.data.target.avatar

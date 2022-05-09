@@ -42,7 +42,7 @@ import LoadMore from '../../components/loadMore.vue'
 import Docker from '../../components/Docker.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { get } from '../../utils/request'
+import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
 
@@ -66,11 +66,11 @@ const useTabEffect = (load, activeIndex, noteList) => {
     try {
       const formData = new FormData()
       formData.append('userId', 0)
-      formData.append('activeIndex', index)
+      formData.append('index', index)
       formData.append('limit', 10)
       formData.append('offset', startCount)
 
-      const result = await get('/note/getNoteList', formData)
+      const result = await post('/note/getNoteList', formData)
       if (result.code === 200 && result.data) {
         const list = result.data
         list.forEach((column) => {
