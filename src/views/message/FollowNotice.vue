@@ -5,12 +5,12 @@
     </div>
     <span class="title">新增关注</span>
   </div>
-  <div class="content__wrapper">
-    <el-empty description="还没有任何通知哟~" v-if="!followNoticeList || !followNoticeList.length" />
+  <div class="content__wrapper" v-loading="loading">
+    <el-empty description="还没有任何通知哟~" v-if="isEmpty" />
     <div v-for="item in followNoticeList" :key="item.id" class="notice__item">
       <span class="notice__avatar">
         <el-badge is-dot :hidden="item.isUnread === false">
-          <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" />
+          <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" @click="handleAvatarClick(item.from.id)" />
         </el-badge>
       </span>
       <div class="notice__wrapper">
@@ -27,7 +27,7 @@
         </div>
       </div>
     </div>
-    <span class="noMore">没有更多啦~</span>
+    <span class="noMore" v-if="followNoticeList.length">没有更多啦~</span>
   </div>
 </template>
 
@@ -36,6 +36,8 @@ import { onMounted, ref } from 'vue'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
+import moment from 'moment'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'FollowNotice',
@@ -44,23 +46,37 @@ export default {
 
     const followNoticeList = ref([]) // 粉丝通知列表
 
+    const loading = ref(true) // 加载中
+
+    const isEmpty = ref(false) // 有无通知
+
     // 获取粉丝通知列表
     const getFollowNoticeList = async () => {
       try {
         console.log('请求了通知')
         const result = await get('/message/getFollowNoticeList')
         if (result.code === 200 && result.data) {
-          // const list = result.data
-          // console.log('通知列表', list)
-          // // 统计未读通知数量
-          // // unreadNotice.value = 0
-          // list.forEach(item => {
-          //  if (item.isUnread) {
-          //    unreadNotice.value += 1
-          //  }
-          // })
-          // unreadTotal.value += unreadNotice.value
-          followNoticeList.value = [...result.data]
+          let list = result.data
+          if (!list.length) {
+            isEmpty.value = true
+          }
+          list = list.map(item => {
+            const currentTime = new Date()
+            const isCurrentDay = currentTime.getDay() === moment(item.time).day() // 日期是否为今天
+            const isCurrentMonth = currentTime.getMonth() === moment(item.time).month() // 日期是否为本月
+            const isCurrentYear = currentTime.getFullYear() === moment(item.time).year() // 日期是否为今年
+            if (isCurrentDay && isCurrentMonth && isCurrentYear) { // 今天内的通知，显示时间
+              item.time = moment(item.time).format('HH:mm')
+            } else if (isCurrentYear) { // 今年内，显示具体月日
+              item.time = moment(item.time).format('MM-DD')
+            } else { // 不是本年，显示年月日
+              item.time = moment(item.time).format('YY-MM-DD')
+            }
+            return item
+          })
+          console.log('格式化时间后的关注列表', list)
+          followNoticeList.value = [...list]
+          loading.value = false // 关闭加载
         } else {
           ElMessage({
             showClose: true,
@@ -85,9 +101,17 @@ export default {
       getFollowNoticeList()
     })
 
+    const router = useRouter()
+    const handleAvatarClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
     return {
       handleBackClick,
-      followNoticeList
+      loading,
+      isEmpty,
+      followNoticeList,
+      handleAvatarClick
     }
   }
 }
@@ -127,6 +151,12 @@ export default {
     height: calc(100vh - .5rem);
     position: relative;
     top: .5rem;
+  }
+  .el-empty{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
   .notice__item{
     display: flex;

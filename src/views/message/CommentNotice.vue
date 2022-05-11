@@ -5,9 +5,9 @@
     </div>
     <span class="title">收到的评论和回复</span>
   </div>
-  <div class="content__wrapper">
-    <el-empty description="还没有任何通知哟~" v-if="!commentNoticeList || !commentNoticeList.length" />
-    <div v-for="item in commentNoticeList" :key="item.id" class="notice__item">
+  <div class="content__wrapper" v-loading="loading">
+    <el-empty description="还没有任何通知哟~" v-if="isEmpty" />
+    <div v-for="item in commentNoticeList" :key="item.id" class="notice__item" @click="handleNoticeClick(item.noteId)">
       <span class="notice__avatar">
         <el-badge is-dot :hidden="item.isUnread === false">
           <el-avatar style="--el-avatar-size: .4rem" :src="item.from.avatar" />
@@ -20,16 +20,16 @@
             <span class="notice__type" v-if="item.type === 'comment'">评论了你：</span>
             <span class="notice__type" v-else>回复了你：</span>
           </div>
-          <span class="notice__content">{{ item.notice.content }}</span>
-          <span class="notice__time">{{item.notice.time}}</span>
+          <span class="notice__content">{{ item.content }}</span>
+          <span class="notice__time">{{item.time}}</span>
         </div>
         <div class="notice__right">
-          <el-image style="width: .55rem; height: .55rem" :src="item.notice.targetEntity.headerImg" fit="cover" v-if="item.notice.targetEntity.headerImg"></el-image>
-          <span class="notice__target" v-else>{{item.notice.targetEntity.comment}}</span>
+          <el-image style="width: .55rem; height: .55rem" :src="item.targetEntity.headerImg" fit="cover" v-if="item.targetEntity.headerImg"></el-image>
+          <span class="notice__target" v-else>{{item.targetEntity.comment}}</span>
         </div>
       </div>
     </div>
-    <span class="noMore">没有更多啦~</span>
+    <span class="noMore" v-if="commentNoticeList.length">没有更多啦~</span>
   </div>
 </template>
 
@@ -38,6 +38,8 @@ import { onMounted, ref } from 'vue'
 import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
+import moment from 'moment'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'CommentNotice',
@@ -46,8 +48,12 @@ export default {
 
     const commentNoticeList = ref([]) // 评论通知列表
 
+    const loading = ref(true) // 加载中
+
+    const isEmpty = ref(false) // 有无通知
+
     // 获取评论通知列表
-    const getCommenNoticeList = async () => {
+    const getCommentNoticeList = async () => {
       try {
         const formData = new FormData()
         formData.append('type', 'comment')
@@ -55,17 +61,27 @@ export default {
         const result = await post('/message/getNoticeList', formData)
         console.log('评论回复通知', result.data)
         if (result.code === 200 && result.data) {
-          // const list = result.data
-          // console.log('通知列表', list)
-          // // 统计未读通知数量
-          // // unreadNotice.value = 0
-          // list.forEach(item => {
-          //  if (item.isUnread) {
-          //    unreadNotice.value += 1
-          //  }
-          // })
-          // unreadTotal.value += unreadNotice.value
-          commentNoticeList.value = [...result.data]
+          let list = result.data
+          if (!list.length) {
+            isEmpty.value = true
+          }
+          list = list.map(item => {
+            const currentTime = new Date()
+            const isCurrentDay = currentTime.getDay() === moment(item.time).day() // 日期是否为今天
+            const isCurrentMonth = currentTime.getMonth() === moment(item.time).month() // 日期是否为本月
+            const isCurrentYear = currentTime.getFullYear() === moment(item.time).year() // 日期是否为今年
+            if (isCurrentDay && isCurrentMonth && isCurrentYear) { // 今天内的通知，显示时间
+              item.time = moment(item.time).format('HH:mm')
+            } else if (isCurrentYear) { // 今年内，显示具体月日
+              item.time = moment(item.time).format('MM-DD')
+            } else { // 不是本年，显示年月日
+              item.time = moment(item.time).format('YY-MM-DD')
+            }
+            return item
+          })
+          console.log('格式化时间后的评论列表', list)
+          commentNoticeList.value = [...list]
+          loading.value = false // 关闭加载
         } else {
           ElMessage({
             showClose: true,
@@ -87,12 +103,20 @@ export default {
     }
 
     onMounted(() => {
-      getCommenNoticeList()
+      getCommentNoticeList()
     })
+
+    const router = useRouter()
+    const handleNoticeClick = (noteId) => {
+      router.push(`/noteDetail/${noteId}`)
+    }
 
     return {
       handleBackClick,
-      commentNoticeList
+      loading,
+      isEmpty,
+      commentNoticeList,
+      handleNoticeClick
     }
   }
 }
@@ -132,6 +156,12 @@ export default {
     height: calc(100vh - .5rem);
     position: relative;
     top: .5rem;
+  }
+  .el-empty{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
   .notice__item{
     display: flex;

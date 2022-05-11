@@ -12,7 +12,7 @@
         <span class="nickname">{{noteDetail.author?.nickname}}</span>
         <span class="editTime">{{noteDetail.note?.editTime}}</span>
       </div>
-      <el-button v-show="noteDetail.author" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
+      <el-button v-show="noteDetail.author?.id != holder.id" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
     </div>
     <div class="more">
       <a class="iconfont more__icon">&#xe6ad;</a>
@@ -42,7 +42,7 @@
       <div class="comments__total">{{`共${noteDetail.commentCount}条评论`}}</div>
       <!-- 评论列表 -->
       <div v-for="item in noteDetail.comments" :key="item.id">
-        <comment :comment="item" @changeCommentLiked="changeCommentLiked"/>
+        <comment :comment="item" :noteId="noteDetail.note.id" @changeCommentLiked="changeCommentLiked"/>
       </div>
     </div>
   </div>
@@ -84,7 +84,7 @@
 <script>
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
 import { useClickOutside } from '../../effects/useClickOutsideEffect'
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
@@ -115,7 +115,7 @@ const useInitDataEffect = (noteDetail) => {
   const route = useRoute()
   const getNoteDetail = async () => {
     try {
-      const result = await get(`/note/getNoteDetail/${route.params.id}`)
+      const result = await get(`/note/getNoteDetail/${route.params.noteId}`)
       if (result.code === 200 && result.data) {
         const detail = result.data
         // 格式化点赞数量
@@ -133,6 +133,36 @@ const useInitDataEffect = (noteDetail) => {
               detail.commentCount += comment.reply.length
             }
           })
+        }
+        // 格式化评论、回复的时间
+        detail.comments.map((comment) => {
+          if (new Date().valueOf() - moment(comment.commentTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
+            comment.commentTime = moment(comment.commentTime).fromNow()
+          } else if (new Date().getFullYear() === moment(comment.commentTime).year()) { // 超过36小时，显示月日
+            comment.commentTime = moment(comment.commentTime).format('MM-DD')
+          } else { // 超过一年，显示年月日
+            comment.commentTime = moment(comment.commentTime).format('YY-MM-DD')
+          }
+          comment.reply.map((item) => {
+            if (new Date().valueOf() - moment(item.replyTime).valueOf() < 129600000) { // 36小时内
+              item.replyTime = moment(item.replyTime).fromNow()
+            } else if (new Date().getFullYear() === moment(item.replyTime).year()) { // 超过36小时，显示月日
+              item.replyTime = moment(item.replyTime).format('MM-DD')
+            } else { // 超过一年，显示年月日
+              item.replyTime = moment(item.replyTime).format('YY-MM-DD')
+            }
+            return item
+          })
+          return comment
+        })
+        // 格式化笔记时间
+        console.log(moment(detail.note.editTime).format('YY-MM-DD HH:mm:ss'))
+        if (new Date().valueOf() - moment(detail.note.editTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
+          detail.note.editTime = moment(detail.note.editTime).fromNow()
+        } else if (new Date().getFullYear() === moment(detail.note.editTime).year()) { // 超过36小时，显示月日
+          detail.note.editTime = moment(detail.note.editTime).format('MM-DD')
+        } else { // 超过一年，显示年月日
+          detail.note.editTime = moment(detail.note.editTime).format('YY-MM-DD')
         }
         noteDetail.value = detail
         // 初始化关注按钮状态
@@ -356,7 +386,7 @@ const useCommentEffect = (noteDetail) => {
   }
 }
 
-const useInputEffect = (noteDetail, inputting) => {
+const useInputEffect = (noteDetail, inputting, holder) => {
   const inputRef = ref(null)
   const handleInputComment = () => {
     console.log('唤起输入框')
@@ -382,14 +412,14 @@ const useInputEffect = (noteDetail, inputting) => {
         // 获取到发送的评论，以及我的信息
         const myComment = {
           user: {
-            id: '1',
-            nickname: '我的昵称',
-            avatar: ''
+            id: holder.id,
+            nickname: holder.nickname,
+            avatar: holder.avatar
           },
           commentText: inputValue.value,
           liked: false,
           likeCount: 0,
-          commentTime: moment().format('YYYY-MM-DD HH:mm:ss')
+          commentTime: '1秒前'
         }
         noteDetail.value.comments.unshift(myComment) // 新增一条评论
         noteDetail.value.commentCount++ // 评论总数增1
@@ -450,7 +480,42 @@ export default {
 
     onMounted(() => {
       getNoteDetail()
+      getHolderInfo()
     })
+
+    const holder = reactive({
+      id: '', // 用户id
+      avatar: '', // 用户头像
+      nickname: '' // 用户昵称
+    })
+
+    const getHolderInfo = async () => {
+      try {
+        const result = await get('/user/getHolderInfo')
+        if (result.code === 200 && result.data) {
+          holder.id = result.data.id
+          holder.avatar = result.data.avatar
+          holder.nickname = result.data.nickname
+          console.log(holder)
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '发生错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
 
     // 点击用户头像进入个人资料页
     const router = useRouter()
@@ -459,7 +524,7 @@ export default {
     }
 
     const inputting = ref(false)
-    const { inputRef, inputValue, handleInputComment, handleSendClick } = useInputEffect(noteDetail, inputting)
+    const { inputRef, inputValue, handleInputComment, handleSendClick } = useInputEffect(noteDetail, inputting, holder)
     // 点击输入框外区域，收起输入框（逻辑有问题）
     const inputWrapperRef = ref(null)
     const { isOutside } = useClickOutside(inputWrapperRef)
@@ -477,6 +542,7 @@ export default {
       handleBackClick,
       mySwiper,
       modules: [Navigation, Pagination, Scrollbar, A11y],
+      holder,
       buttonType,
       followButtonText,
       likedIcon,

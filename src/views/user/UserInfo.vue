@@ -72,7 +72,8 @@
     <div class="under" ref="underRef">
       <el-tabs v-model="activeTab" class="demo-tabs" @tab-click="handleTabClick">
         <el-tab-pane label="笔记" name="0">
-          <el-empty description="空空如也~" v-if="noteList[0].length === 0"/>
+          <load-more element-loading-background="#fff" v-if="loading" />
+          <el-empty description="空空如也~" v-if="!noteList[0].length && noMore[0]"/>
           <div class="wrapper" v-else>
             <div
               v-for="item in noteList[0]"
@@ -83,12 +84,13 @@
             </div>
           </div>
           <div v-if="noteList[0].length > 0">
-            <load-more v-if="loadMore" />
-            <div class="noMore" v-if="!loadMore">哎呀 没有更多数据啦~</div>
+            <load-more element-loading-background="#fff" v-if="loadMore[0]" />
+            <div class="noMore" v-if="noMore[0]">哎呀 没有更多数据啦~</div>
           </div>
         </el-tab-pane>
         <el-tab-pane label="收藏" name="1">
-          <el-empty description="空空如也~" v-if="noteList[1].length === 0"/>
+          <load-more element-loading-background="#fff" v-if="loading" />
+          <el-empty description="空空如也~" v-if="!noteList[1].length && noMore[1]"/>
           <div class="wrapper" v-else>
             <div
               v-for="item in noteList[1]"
@@ -99,8 +101,8 @@
             </div>
           </div>
           <div v-if="noteList[1].length > 0">
-            <load-more v-if="loadMore" />
-            <div class="noMore" v-if="!loadMore">哎呀 没有更多数据啦~</div>
+            <load-more element-loading-background="#fff" v-if="loadMore[1]" />
+            <div class="noMore" v-if="noMore[1]">哎呀 没有更多数据啦~</div>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -264,45 +266,44 @@ const useUserInfoEffect = () => {
   }
 }
 
-const useNoteListEffect = (route, loadMore, noMore, noteList) => {
-  const startCount = ref(0)
+const useNoteListEffect = (route, noMore, noteList) => {
+  const loading = ref(true) // 加载中
+
+  const startCount = ref([0, 0])
   // 获取笔记列表
   const getNoteList = async (refresh) => {
-    loadMore.value = true
-    noMore.value = false
+    if (refresh) {
+      startCount.value[0] = 0
+    }
     try {
       const formData = new FormData()
       formData.append('userId', route.params.userId)
       formData.append('limit', 10)
-      formData.append('offset', startCount.value)
+      formData.append('offset', startCount.value[0])
       formData.append('index', 2)
 
       const result = await post('/note/getNoteList', formData)
-      if (result.code === 200) {
+      if (result.code === 200 && result.data) {
         const list = result.data
-        console.log(list)
-        if (!list) {
-          console.log('nullListChangeNoMore')
-          loadMore.value = false
-          noMore.value = true
-          return
-        }
         list.forEach((column) => {
           const likeCount = handleCountShow(column.note.likeCount) // 格式化点赞数量
           column.note.likeCount = likeCount
         })
+        if (list.length < 10) { // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
+          noMore.value[0] = true
+        } else { // 还有笔记
+          noMore.value[0] = false
+          startCount.value[0] += list.length
+        }
         // 刷新笔记列表
         if (refresh) {
           noteList.value[0] = [...list]
         } else { // 不刷新，加载更多笔记
           noteList.value[0].push(...list)
-          // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
-          if (list.length < 10) {
-            noMore.value = true
-          }
-          startCount.value += list.length
         }
-        console.log('笔记列表', noteList.value[0], noteList.value)
+        loading.value = false // 关闭加载组件
+        console.log('笔记列表', noteList.value[0])
+        console.log('noMore', noMore.value[0])
       } else {
         ElMessage({
           showClose: true,
@@ -322,48 +323,39 @@ const useNoteListEffect = (route, loadMore, noMore, noteList) => {
       })
     }
   }
-  return {
-    getNoteList
-  }
-}
 
-const useCollectedNoteListEffect = (route, loadMore, noMore, noteList) => {
-  const startCount = ref(0)
   // 获取收藏列表
   const getCollectedNoteList = async (refresh) => {
-    loadMore.value = true
-    noMore.value = false
+    if (refresh) {
+      startCount.value[1] = 0
+    }
     try {
       const formData = new FormData()
       formData.append('userId', route.params.userId)
       formData.append('limit', 10)
-      formData.append('offset', startCount.value)
+      formData.append('offset', startCount.value[1])
       const result = await post('/user/getCollectedNoteList', formData)
-      if (result.code === 200) {
+      if (result.code === 200 && result.data) {
         const list = result.data
-        console.log(list)
-        if (!list) {
-          console.log('nullListChangeNoMore')
-          loadMore.value = false
-          noMore.value = true
-          return
-        }
         list.forEach((column) => {
           const likeCount = handleCountShow(column.note.likeCount) // 格式化点赞数量
           column.note.likeCount = likeCount
         })
+        if (list.length < 10) { // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
+          noMore.value[1] = true
+        } else { // 还有笔记
+          noMore.value[1] = false
+          startCount.value[1] += list.length
+        }
         // 刷新笔记列表
         if (refresh) {
           noteList.value[1] = [...list]
         } else { // 不刷新，加载更多笔记
           noteList.value[1].push(...list)
-          // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
-          if (list.length < 10) {
-            noMore.value = true
-          }
-          startCount.value += list.length
         }
+        loading.value = false // 关闭加载组件
         console.log('收藏列表', noteList.value[1])
+        console.log('noMore', noMore.value[1])
       } else {
         ElMessage({
           showClose: true,
@@ -383,8 +375,23 @@ const useCollectedNoteListEffect = (route, loadMore, noMore, noteList) => {
       })
     }
   }
+
+  // 节流函数
+  let pre = 0 // 前一次任务触发时间
+  const throttle = (func, delay) => {
+    const now = new Date() // 当前任务触发时间
+    if (now - pre > delay) { // 间隔时间超过设定的时间，执行任务，更新pre
+      console.log('在节流函数中,执行获取笔记方法')
+      func()
+      pre = now
+    }
+  }
+
   return {
-    getCollectedNoteList
+    loading,
+    getNoteList,
+    getCollectedNoteList,
+    throttle
   }
 }
 
@@ -396,10 +403,8 @@ export default {
   },
   setup () {
     const { holderUserId, getHolderUserId } = useHolderUserEffect() // 处理当前使用者相关逻辑
-    getHolderUserId()
 
     const { userInfo, route, getUserInfo } = useUserInfoEffect() // 处理用户信息相关逻辑
-    getUserInfo()
 
     const { handleBackClick } = useBackRouterEffect() // 返回上一页
 
@@ -512,19 +517,17 @@ export default {
 
     const noteList = ref([[], []])
 
-    const loadMore = ref(true)
-    const noMore = ref(false)
+    const loadMore = ref([false, false]) // 控制加载更多图标的显示
+    const noMore = ref([false, false]) // 控制没有更多组件的显示
 
-    const { getNoteList } = useNoteListEffect(route, loadMore, noMore, noteList)
+    const { loading, getNoteList, getCollectedNoteList, throttle } = useNoteListEffect(route, noMore, noteList)
 
     onMounted(() => {
+      getHolderUserId()
+      getUserInfo()
       getNoteList(true) // 进入用户资料，自动加载笔记
-      console.log('笔记', noteList.value)
-      console.log('underRef', underRef.value)
       underRef.value.addEventListener('scroll', scrollToBottom)
     })
-
-    const { getCollectedNoteList } = useCollectedNoteListEffect(route, loadMore, noMore, noteList)
 
     // 点赞与取消
     const changeLiked = (id, liked, count) => {
@@ -559,26 +562,30 @@ export default {
       const scrollTop = underRef.value.scrollTop
       const scrollHeight = underRef.value.scrollHeight
       const clientHeight = underRef.value.clientHeight
-      // console.log('到底了吗', scrollTop + clientHeight >= scrollHeight - 1)
+      // 判断是否滑到底部
       if (scrollTop + clientHeight >= scrollHeight - 1) {
-        console.log('noMore', noMore.value, 'loadMore', loadMore.value)
-        if (!noMore.value) {
-          loadMore.value = true
-          if (activeTab.value === 0) {
-            getNoteList(false)
+        if (!noMore.value[activeTab.value]) { // 未加载完
+          loadMore.value[activeTab.value] = true
+          console.log('还有笔记，loadMore', loadMore.value)
+          if (activeTab.value === 0 || activeTab.value === '0') {
+            throttle(() => getNoteList(false), 2000)
           } else {
-            getCollectedNoteList(false)
+            throttle(() => getCollectedNoteList(false), 2000)
           }
-        } else {
-          // 没有更多数据了
-          loadMore.value = false
+        } else { // 没有更多数据了
+          loadMore.value[activeTab.value] = false
+          console.log('加载完了，loadMore', loadMore.value)
         }
+      } else {
+        console.log('没滑到底部')
+        loadMore.value[activeTab.value] = false
       }
     }
 
     return {
       holderUserId,
       userInfo,
+      loading,
       handleBackClick,
       handleChatClick,
       handleEditClick,
@@ -593,6 +600,7 @@ export default {
       noteList,
       activeTab,
       loadMore,
+      noMore,
       underRef,
       handleTabClick
     }
@@ -697,11 +705,14 @@ export default {
     height: .4rem;
     line-height: .4rem;
   }
-  .demo-tabs > .el-tabs__content {
-    padding: .32rem;
-    color: #6b778c;
-    font-size: .32rem;
-    font-weight: 600;
+  //.demo-tabs > .el-tabs__content {
+  //  padding: .32rem;
+  //  color: #6b778c;
+  //  font-size: .32rem;
+  //  font-weight: 600;
+  //}
+  .el-tabs__header {
+    margin: 0 0 5px 0;
   }
   :deep(.el-tabs__nav){
     float: none;

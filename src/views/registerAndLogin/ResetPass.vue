@@ -169,7 +169,7 @@ const useCodeEffect = (resetFormRef) => {
         try {
           const formData = new FormData()
           formData.append('email', email)
-          const result = await post('/user/login/sendVerificationCode', formData)
+          const result = await post('/user/sendCodeForResetPass', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,

@@ -34,9 +34,28 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue'
+import { get } from '../utils/request'
 export default {
   name: 'Docker',
-  props: ['currentIndex', 'unreadTotal']
+  props: ['currentIndex'],
+  setup () {
+    const unreadTotal = ref(0) // 未读消息总数
+    const getUnreadTotal = async () => {
+      try {
+        const result = await get('/message/getUnreadCount') // 未读消息总数
+        unreadTotal.value = result.data
+      } catch (e) {
+        console.log('获取未读消息总数出错')
+      }
+    }
+    onMounted(() => {
+      getUnreadTotal()
+    })
+    return {
+      unreadTotal
+    }
+  }
 }
 </script>
 

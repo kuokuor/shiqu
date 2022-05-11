@@ -11,7 +11,7 @@
         class="msg__wrapper"
       >
         <div class="msg" v-if="item.fromId === myUserId" style="float: right;"> <!-- 我发的消息 -->
-          <div class="user__wrapper">
+          <div class="user__wrapper" style="justify-content: end;">
             <div class="user__msg">
               <span>{{item.content}}</span>
             </div>
@@ -61,6 +61,7 @@ export default {
     const contentText = ref('') // 发送的消息内容
     const myUserId = ref('') // 自己的id
     const myAvatar = ref('') // 自己的头像
+
     const chatList = ref([]) // 聊天记录
 
     const { handleBackClick } = useBackRouterEffect()
@@ -75,11 +76,18 @@ export default {
         console.log('请求了聊天记录')
         const result = await post('/message/getChatList', formData)
         if (result.code === 200 && result.data) {
-          targetNickname.value = result.data.target.nickname
-          targetAvatar.value = result.data.target.avatar
-          myUserId.value = result.data.holder.id
-          myAvatar.value = result.data.holder.avatar
-          chatList.value = [...result.data.letterList]
+          const chats = result.data
+          targetNickname.value = chats.target.nickname
+          targetAvatar.value = chats.target.avatar
+          myUserId.value = chats.holder.id
+          myAvatar.value = chats.holder.avatar
+
+          chats.letterList.map((chat) => {
+            chat.createTime = moment(chat.createTime).format('YY-MM-DD HH:mm:ss')
+            return chat
+          })
+          chatList.value = [...chats.letterList]
+
           nextTick(() => {
             const scrollHeight = msgBox.value.scrollHeight // 聊天框整体高度
             const clientHeight = msgBox.value.clientHeight // 聊天框可视高度
@@ -132,7 +140,7 @@ export default {
             fromId: myUserId.value,
             avatar: myAvatar.value,
             content: contentText.value,
-            createTime: moment().format('YYYY-MM-DD HH:mm:ss')
+            createTime: moment().format('YY-MM-DD HH:mm:ss')
           }
           chatList.value.push(newChat)
           nextTick(() => {

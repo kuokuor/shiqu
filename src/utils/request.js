@@ -2,7 +2,8 @@ import axios from 'axios'
 
 // 创建axios实例
 const instance = axios.create({
-  baseURL: 'http://127.0.0.1:4523/mock/814181',
+  baseURL: 'http://127.0.0.1/shiqu_be',
+  // baseURL: 'http://127.0.0.1:4523/mock/814181',
   timeout: 10000 // 十秒就算请求超时
 })
 

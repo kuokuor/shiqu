@@ -42,10 +42,13 @@
     </div>
     <div class="photo__group">
       <el-upload
-        action="https://jsonplaceholder.typicode.com/posts/"
+        action="https://upload-z2.qiniup.com"
+        :data="uploadToken"
         list-type="picture-card"
         :on-preview="handlePictureCardPreview"
         :on-remove="handleRemove"
+        :on-success="handleSuccess"
+        :before-upload="beforeUpload"
         :file-list="photoList"
         :limit=9
       >
@@ -70,12 +73,12 @@
       <!-- 展示已选择的标签 -->
       <div class="my__tags">
         <el-tag
-          v-for="(item, index) in tagsName"
-          :key="index"
+          v-for="(value, key) in tagsName"
+          :key="key"
           closable
-          @close="deleteTag(index)"
+          @close="deleteTag(key)"
         >
-          {{item}}
+          {{value}}
         </el-tag>
       </div>
     </div>
@@ -127,7 +130,7 @@
 <script>
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
 import { onMounted, reactive, ref, toRefs } from 'vue'
-import { post } from '../../utils/request'
+import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { CameraFilled } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
@@ -144,37 +147,39 @@ export default {
       title: '', // 笔记的标题
       content: '', // 正文内容
       type: '', // 笔记类型（0: 美食笔记；1: 探店笔记）（页面上显示类型名称，传给后端对应number）
-      tagsName: [], // 标签（此处存放对应标签名，为了草稿的展示。传给后端对应number）
+      tagsName: {}, // 标签（此处存放对应标签名，为了草稿的展示。传给后端对应number）
       photoList: [
-        {
-          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        },
-        {
-          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Ftupian.qqjay.com%2Fu%2F2016%2F0919%2F1_171052_3.jpg&refer=http%3A%2F%2Ftupian.qqjay.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653481677&t=d5d0351302aa3025bccd920518a522a0'
-        },
-        {
-          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi-1.lanrentuku.com%2F2020%2F7%2F10%2Fb87c8e05-344a-48d1-869f-ef6929fc8b17.jpg&refer=http%3A%2F%2Fi-1.lanrentuku.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653482496&t=6593efac0c365a9302c5a33618ec2e03'
-        },
-        {
-          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        },
-        {
-          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        },
-        {
-          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        },
-        {
-          url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        },
-        {
-          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
-        },
-        {
-          url: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic1.zhimg.com%2Fv2-e4596f43b774b6fc878a8c6070e4713d_r.jpg%3Fsource%3D1940ef5c&refer=http%3A%2F%2Fpic1.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1653485681&t=ce9cdbe97e3e4cf3cf2ebbc33310577e'
-        }
+
       ] // 准备上传的图片文件列表
     })
+
+    const uploadToken = reactive({
+      token: null
+    })
+    const getUploadToken = async () => {
+      try {
+        const result = await get('/image/getToken')
+        if (result.code === 200) {
+          uploadToken.token = result.data
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '发生错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
 
     onMounted(() => {
       const savedNote = JSON.parse(localStorage.getItem('savedNote')) // 获取localStorage保存的内容
@@ -186,7 +191,39 @@ export default {
         noteData.tagsName = savedNote.tagsName
         noteData.photoList = savedNote.photoList
       }
+      getUploadToken()
     })
+
+    // 上传前先处理类型
+    const beforeUpload = (rawFile) => {
+      if (rawFile.type !== 'image/jpeg') {
+        ElMessage({
+          showClose: true,
+          message: 'Avatar picture must be JPG format!',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+        return false
+      } else if (rawFile.size / 1024 / 1024 > 2) {
+        ElMessage({
+          showClose: true,
+          message: 'Avatar picture size can not exceed 2MB!',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+        return false
+      }
+      return true
+    }
+
+    const handleSuccess = (res) => {
+      console.log(noteData.photoList)
+      noteData.photoList.pop()
+      noteData.photoList.push({ url: 'http://shiqu.hyxk.xyz/' + res.key })
+      console.log(noteData.photoList)
+    }
 
     const backDialogVisible = ref(false) // 点击返回图标后是否显示dialog
 
@@ -265,12 +302,9 @@ export default {
 
     const tagsDrawer = ref(false) // tags选择页(drawer)
 
-    const tags = [] // tag标签对应序号列表（用来传给后端）
-
     // 添加标签
     const addTag = (tagName, tagIndex) => {
-      console.log('新增标签', tagName)
-      if (noteData.tagsName.indexOf(tagName) !== -1) { // 已添加过的tag不能重复添加
+      if (noteData.tagsName[tagIndex] !== undefined) { // 已添加过的tag不能重复添加
         ElMessage({
           showClose: true,
           message: '标签重复',
@@ -279,26 +313,28 @@ export default {
           duration: 1000
         })
       } else {
-        noteData.tagsName.push(tagName) // 将点击的标签加入标签列表
-        tags.push(tagIndex) // 将选择的标签对应序号加入tags列表
+        noteData.tagsName[tagIndex] = tagName // 将点击的标签加入标签列表
         tagsDrawer.value = false // 关闭drawer
       }
     }
 
     // 移除已选标签
     const deleteTag = (tagIndex) => {
-      noteData.tagsName.splice(tagIndex, 1) // 删除选中的标签
-      tags.splice(tagIndex, 1) // 在tags列表中删除对应的序号
+      delete noteData.tagsName[tagIndex] // 删除选中的标签
     }
 
     // 发布笔记
     const router = useRouter()
     const postNote = async () => {
       try {
+        let tags = [] // 选择的标签
+        tags = Object.keys(noteData.tagsName)
+
         const images = [] // 上传的图片路径
         noteData.photoList.forEach((item) => {
           images.push(item.url)
         })
+
         const noteType = noteData.type === '美食笔记' ? 0 : 1
 
         const formData = new FormData()
@@ -306,7 +342,7 @@ export default {
         formData.append('content', noteData.content)
         formData.append('type', noteType)
         formData.append('tags', tags)
-        formData.append('images', images)
+        formData.append('photoList', images)
 
         const result = await post('/note/createNote', formData)
         if (result.code === 200) {
@@ -344,6 +380,9 @@ export default {
     return {
       backDialogVisible,
       handleBack,
+      uploadToken,
+      beforeUpload,
+      handleSuccess,
       handleNoSave,
       handleSave,
       title,

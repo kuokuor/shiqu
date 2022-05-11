@@ -20,7 +20,8 @@
     </div>
   </div>
   <div class="main" ref="mainDiv">
-    <div class="wrapper">
+    <el-empty description="还没有笔记哦" v-if="!noteList[activeIndex].length" />
+    <div class="wrapper" v-else>
       <div
         v-for="item in noteList[activeIndex]"
         :key="item.note.id"
@@ -29,8 +30,8 @@
         <contents :noteData="item" @changeLiked="changeLiked" />
       </div>
     </div>
-    <load-more v-if="loadMore" />
-    <div class="noMore" v-if="!loadMore">哎呀 已经到底啦~</div>
+    <load-more v-if="noteList[activeIndex].length && loadMore[activeIndex]" />
+    <div class="noMore" v-if="noteList[activeIndex].length && noMore[activeIndex]">哎呀 已经到底啦~</div>
   </div>
   <docker :currentIndex="1" />
 </template>
@@ -59,16 +60,19 @@ const useTabEffect = (load, activeIndex, noteList) => {
     activeIndex.value = index
   }
 
-  const startCount = ref(0)
-  const noMore = ref(false)
+  const startCount = ref([0, 0, 0])
+  const noMore = ref([false, false, false]) // 控制没有更多组件的显示
   // 获取笔记列表
   const getNoteList = async (index, refresh) => {
+    if (refresh) {
+      startCount.value[index] = 0
+    }
     try {
       const formData = new FormData()
       formData.append('userId', 0)
       formData.append('index', index)
       formData.append('limit', 10)
-      formData.append('offset', startCount.value)
+      formData.append('offset', startCount.value[index])
 
       const result = await post('/note/getNoteList', formData)
       if (result.code === 200 && result.data) {
@@ -77,20 +81,21 @@ const useTabEffect = (load, activeIndex, noteList) => {
           const likeCount = handleCountShow(column.note.likeCount) // 格式化点赞数量
           column.note.likeCount = likeCount
         })
+        if (list.length < 10) { // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
+          noMore.value[index] = true
+        } else { // 还有笔记
+          noMore.value[index] = false
+          startCount.value[index] += list.length
+        }
         // 刷新笔记列表
         if (refresh) {
           noteList.value[index] = [...list]
-          setTimeout(() => {
-            load.value = false // 获取数据成功，关闭loading效果
-          }, 1000)
+          load.value = false // 获取数据成功，关闭loading效果
         } else { // 不刷新，加载更多笔记
           noteList.value[index].push(...list)
-          // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
-          if (list.length < 10) {
-            noMore.value = true
-          }
-          startCount.value += list.length
         }
+        console.log(noteList.value[index])
+        console.log('noMore', noMore.value)
       } else {
         ElMessage({
           showClose: true,
@@ -110,10 +115,23 @@ const useTabEffect = (load, activeIndex, noteList) => {
       })
     }
   }
+
+  // 节流函数
+  let pre = 0 // 前一次任务触发时间
+  const throttle = (func, delay) => {
+    const now = new Date() // 当前任务触发时间
+    if (now - pre > delay) { // 间隔时间超过设定的时间，执行任务，更新pre
+      console.log('在节流函数中,执行获取笔记方法')
+      func()
+      pre = now
+    }
+  }
+
   return {
     handleTabClick,
     noMore,
-    getNoteList
+    getNoteList,
+    throttle
   }
 }
 
@@ -129,7 +147,7 @@ export default {
     const load = ref(true) // 控制loading展示与否
     const activeIndex = ref(1) // 被选中的模块
     const noteList = ref([[], [], []]) // 存放关注、热门、最新的笔记列表
-    const { handleTabClick, noMore, getNoteList } = useTabEffect(load, activeIndex, noteList)
+    const { handleTabClick, noMore, getNoteList, throttle } = useTabEffect(load, activeIndex, noteList)
 
     onMounted(() => {
       if (load.value) {
@@ -151,20 +169,27 @@ export default {
       })
     }
 
-    const loadMore = ref(false)
+    const loadMore = ref([false, false, false]) // 控制加载更多图标的显示
     const mainDiv = ref(null)
     const scrollToBottom = () => {
       const scrollTop = mainDiv.value.scrollTop
       const scrollHeight = mainDiv.value.firstChild.scrollHeight
       const clientHeight = mainDiv.value.clientHeight
+      console.log(scrollTop, clientHeight, scrollTop + clientHeight, scrollHeight)
+      // 判断是否滑到底部
       if (scrollTop + clientHeight >= scrollHeight - 1) {
-        if (!noMore.value) {
-          loadMore.value = true
-          getNoteList(activeIndex.value, false) // 加载更多笔记
-        } else {
-          // 没有更多数据了
-          loadMore.value = false
+        console.log('滑到底部了')
+        if (!noMore.value[activeIndex.value]) { // 未加载完
+          loadMore.value[activeIndex.value] = true
+          console.log('还有笔记，loadMore', loadMore.value)
+          throttle(() => getNoteList(activeIndex.value, false), 2000) // 加载更多笔记
+        } else { // 全部加载完了
+          loadMore.value[activeIndex.value] = false
+          console.log('加载完了，loadMore', loadMore.value)
         }
+      } else {
+        console.log('没滑到底部')
+        loadMore.value[activeIndex.value] = false
       }
     }
 
@@ -181,6 +206,7 @@ export default {
       getNoteList,
       changeLiked,
       loadMore,
+      noMore,
       mainDiv,
       handleSearch
     }
@@ -274,6 +300,12 @@ export default {
     height: calc(100vh - 1rem);
     overflow: auto;
     background: $content-bgColor;
+  }
+  .el-empty{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
   .noMore{
     width: 100%;

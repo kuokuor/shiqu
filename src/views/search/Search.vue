@@ -14,9 +14,9 @@
       >
         <template #prepend>
           <el-select v-model="type">
-            <el-option label="美食笔记" value="1" />
-            <el-option label="探店笔记" value="2" />
-            <el-option label="全部" value="0" />
+            <el-option label="美食笔记" value="美食笔记" />
+            <el-option label="探店笔记" value="探店笔记" />
+            <el-option label="全部" value="全部"/>
           </el-select>
         </template>
       </el-input>
@@ -81,13 +81,21 @@ export default {
 
     // 获取笔记列表
     const getNoteList = async (refresh) => {
+      if (refresh) {
+        currentPage.value = 1
+      }
       try {
         const formData = new FormData()
-        formData.append('keyword', searchText)
-        formData.append('type', type.value)
-        formData.append('current', currentPage.value)
-        formData.append('limit', 20)
-
+        formData.append('keyword', searchText.value)
+        if (type.value === '全部') {
+          formData.append('type', 0)
+        } else if (type.value === '美食笔记') {
+          formData.append('type', 1)
+        } else {
+          formData.append('type', 2)
+        }
+        formData.append('current', currentPage.value - 1)
+        formData.append('limit', 10)
         const result = await post('/note/search', formData)
         if (result.code === 200 && result.data) {
           const list = result.data
@@ -95,20 +103,22 @@ export default {
             const likeCount = handleCountShow(column.note.likeCount) // 格式化点赞数量
             column.note.likeCount = likeCount
           })
+          console.log(list)
+          if (list.length < 10) { // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
+            noMore.value = true
+          } else { // 还有笔记
+            noMore.value = false
+            currentPage.value += list.length
+          }
           // 刷新笔记列表
           if (refresh) {
             noteList.value = [...list]
-            setTimeout(() => {
-              load.value = false // 获取数据成功，关闭loading效果
-            }, 1000)
+            load.value = false // 获取数据成功，关闭loading效果
           } else { // 不刷新，加载更多笔记
             noteList.value.push(...list)
-            // 新加载的笔记数量小于每次加载限制数量，表示已经全部加载完
-            if (list.length < 10) {
-              noMore.value = true
-            }
-            currentPage.value++
           }
+          console.log(noteList.value)
+          console.log('noMore', noMore.value)
         } else {
           ElMessage({
             showClose: true,
@@ -129,16 +139,28 @@ export default {
       }
     }
 
+    // 节流函数
+    let pre = 0 // 前一次任务触发时间
+    const throttle = (func, delay) => {
+      const now = new Date() // 当前任务触发时间
+      if (now - pre > delay) { // 间隔时间超过设定的时间，执行任务，更新pre
+        console.log('在节流函数中,执行获取笔记方法')
+        func()
+        pre = now
+      }
+    }
+
     const isEmpty = ref(false) // 没有匹配内容
     // 点击进行搜索
-    const handleSearchClick = () => {
+    const handleSearchClick = async () => {
       // 没有输入内容或内容为空时，不可搜索
       if (searchText.value === '') {
         return
       }
       load.value = true // 开启loading动画效果
-      getNoteList(true)
+      await getNoteList(true)
       // 笔记列表为空，设置空状态；否则展示笔记列表
+      console.log(noteList.value.length)
       if (!noteList.value.length) {
         isEmpty.value = true
       } else {
@@ -168,14 +190,20 @@ export default {
       const scrollTop = mainDiv.value.scrollTop
       const scrollHeight = mainDiv.value.firstChild.scrollHeight
       const clientHeight = mainDiv.value.clientHeight
+      // 判断是否滑到底部
       if (scrollTop + clientHeight >= scrollHeight - 1) {
-        if (!noMore.value) {
+        console.log('滑到底部了')
+        if (!noMore.value) { // 未加载完
           loadMore.value = true
-          getNoteList(false) // 加载更多笔记
-        } else {
-          // 没有更多数据了
+          console.log('还有笔记，loadMore', loadMore.value)
+          throttle(() => getNoteList(false), 2000) // 加载更多笔记
+        } else { // 全部加载完了
           loadMore.value = false
+          console.log('加载完了，loadMore', loadMore.value)
         }
+      } else {
+        console.log('没滑到底部')
+        loadMore.value = false
       }
     }
 
@@ -284,6 +312,12 @@ export default {
     height: calc(100vh - .5rem);
     overflow: auto;
     background: $content-bgColor;
+  }
+  .el-empty{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
   .wrapper{
     padding: 0 .02rem;

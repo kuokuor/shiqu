@@ -1,42 +1,27 @@
 <template>
-  <div class="header">
-    消息
-    <!--<ul class="nav">
-      <li class="nav__item" @click="handleTabClick(0)">
-        <el-badge :value="unreadNotice" :max="99" :hidden="unreadNotice === 0">
-          <span :class="{'nav-link': true, 'active': activeIndex === 0}" :tab="activeIndex">通知</span>
-        </el-badge>
-        <div :class="{'line': activeIndex === 0}"></div>
-      </li>
-      <li class="nav__item" @click="handleTabClick(1)">
-        <el-badge :value="unreadLetter" :max="99" :hidden="unreadLetter === 0">
-          <span :class="{'nav-link': true, 'active': activeIndex === 1}" :tab="activeIndex">私信</span>
-        </el-badge>
-        <div :class="{'line': activeIndex === 1}"></div>
-      </li>
-    </ul>
-    <div class="manage">
-      <span class="iconfont manage__icon" @click="handleManageClick" v-html="manageIcon"></span>
-    </div>-->
-  </div>
+  <div class="header">消息</div>
   <div class="main">
     <div class="notice">
       <div class="notice__header">
         <div class="icon__wrapper">
           <span class="iconfont like__icon" @click="toLikeNotice">&#xe610;</span>
           <span>点赞</span>
+          <el-badge :value="unreadLikeCount" :max="99" :hidden="unreadLikeCount === 0" />
         </div>
         <div class="icon__wrapper">
           <span class="iconfont collect__icon" @click="toCollectNotice">&#xe60b;</span>
           <span>收藏</span>
+          <el-badge :value="unreadCollectCount" :max="99" :hidden="unreadCollectCount === 0" />
         </div>
         <div class="icon__wrapper">
           <span class="iconfont share__icon" @click="toCommentNotice">&#xe62c;</span>
-          <span>评论/回复</span>
+          <span>评论和回复</span>
+          <el-badge :value="unreadCommentCount" :max="99" :hidden="unreadCommentCount === 0" />
         </div>
         <div class="icon__wrapper">
           <span class="iconfont fans__icon" @click="toFansNotice">&#xe6d8;</span>
           <span>粉丝</span>
+          <el-badge :value="unreadFollowCount" :max="99" :hidden="unreadFollowCount === 0" />
         </div>
       </div>
     </div>
@@ -75,6 +60,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
+import moment from 'moment'
 import Docker from '../../components/Docker.vue'
 
 export default {
@@ -83,7 +69,24 @@ export default {
     Docker
   },
   setup () {
-    const unreadTotal = ref(0) // 未读消息总数
+    // const unreadTotal = ref(0) // 未读消息总数
+
+    const unreadLikeCount = ref(0) // 未读点赞通知数
+    const unreadCollectCount = ref(0) // 未读收藏通知数
+    const unreadCommentCount = ref(0) // 未读评论回复通知数
+    const unreadFollowCount = ref(0) // 未读关注通知数
+
+    const getUnreadNoticeCount = async () => {
+      try {
+        const result = await get('/message/getUnreadNoticeCount') // 各类未读通知数量
+        unreadLikeCount.value = result.data.like
+        unreadCollectCount.value = result.data.collect
+        unreadCommentCount.value = result.data.comment
+        unreadFollowCount.value = result.data.follow
+      } catch (e) {
+        console.log('获取未读通知数量出错')
+      }
+    }
 
     const router = useRouter()
 
@@ -103,10 +106,7 @@ export default {
       router.push('/followNotice')
     }
 
-    const unreadNotice = ref(0) // 未读通知总数
-
     const letterList = ref([]) // 私信列表
-    const unreadLetter = ref(0) // 未读私信总数
     // 获取私信列表
     const getLetterList = async () => {
       try {
@@ -115,12 +115,20 @@ export default {
         if (result.code === 200 && result.data) {
           const list = result.data
           console.log('私信列表', list)
-          // 统计未读私信数量
-          // unreadLetter.value = 0 // 重置
-          list.forEach(item => {
-            unreadLetter.value += item.letter.unreadCount
+          list.map((item) => {
+            const currentTime = new Date()
+            const isCurrentDay = currentTime.getDay() === moment(item.letter.lastTime).day() // 日期是否为今天
+            const isCurrentMonth = currentTime.getMonth() === moment(item.letter.lastTime).month() // 日期是否为本月
+            const isCurrentYear = currentTime.getFullYear() === moment(item.letter.lastTime).year() // 日期是否为今年
+            if (isCurrentDay && isCurrentMonth && isCurrentYear) { // 今天内的私信，显示时间
+              item.letter.lastTime = moment(item.letter.lastTime).format('HH:mm')
+            } else if (isCurrentYear) { // 今年内，显示具体月日
+              item.letter.lastTime = moment(item.letter.lastTime).format('MM-DD')
+            } else { // 不是本年，显示年月日
+              item.letter.lastTime = moment(item.letter.lastTime).format('YY-MM-DD')
+            }
+            return item
           })
-          unreadTotal.value += unreadLetter.value
           letterList.value = [...list]
         } else {
           ElMessage({
@@ -143,6 +151,7 @@ export default {
     }
 
     onMounted(() => {
+      getUnreadNoticeCount()
       getLetterList()
     })
 
@@ -156,25 +165,19 @@ export default {
     }
 
     const toChat = (targetId) => {
-      // 将当前点击的私信未读数量置为0（可删除，后台会有相应操作）
-      // letterList.value.forEach((item) => {
-      //  if (item.from.id === userId) {
-      //    unreadLetter.value -= item.letter.unreadCount // 减去当前已读私信数量
-      //    item.letter.unreadCount = 0 // 当前私信未读数量置为0
-      //  }
-      // })
       router.push(`/chat/${targetId}`)
     }
 
     return {
-      unreadTotal,
+      unreadLikeCount,
+      unreadCollectCount,
+      unreadCommentCount,
+      unreadFollowCount,
       toLikeNotice,
       toCollectNotice,
       toCommentNotice,
       toFansNotice,
       letterList,
-      unreadLetter,
-      unreadNotice,
       manageIcon,
       handleManageClick,
       toChat
@@ -187,7 +190,6 @@ export default {
 @import '../../style/viriables.scss';
 @import '../../style/mixins.scss';
   .header{
-    //display: flex;
     width: 100%;
     height: .5rem;
     line-height: .5rem;
@@ -211,41 +213,6 @@ export default {
     //  }
     //}
   }
-  //.nav{
-  //  flex: 1;
-  //  flex-wrap: nowrap;
-  //  margin-left: .5rem;
-  //  &__item{
-  //    flex: 1;
-  //    display: flex;
-  //    flex-direction: column;
-  //    justify-content: center;
-  //    align-items: center;
-  //    :deep(sup){
-  //      top: .1rem;
-  //      right: .05rem;
-  //    }
-  //    .nav-link{
-  //      line-height: .4rem;
-  //      //margin-top: .04rem;
-  //      padding: 0;
-  //      font-size: .16rem;
-  //      color: $textColor;
-  //    }
-  //    .active{
-  //      font-weight: bolder;
-  //      color: $themeColor;
-  //      margin: 0;
-  //    }
-  //    .line{
-  //      width: .2rem;
-  //      height: .04rem;
-  //      margin-top: -.04rem;
-  //      background: $themeColor;
-  //      border-radius: .05rem;
-  //    }
-  //  }
-  //}
   .main{
     width: 100%;
     height: calc(100vh - 1rem);
@@ -281,63 +248,11 @@ export default {
           }
         }
       }
-      //&__item{
-      //  display: flex;
-      //  padding-top: 0.1rem;
-      //  .notice__avatar{
-      //    margin: 0 .15rem;
-      //    :deep(sup){
-      //      right: .5rem;
-      //    }
-      //  }
-      //  .notice__wrapper{
-      //    flex: 1;
-      //    display: flex;
-      //    margin-right: .1rem;
-      //    padding-bottom: .05rem;
-      //    border-bottom: 1px solid $content-bgColor;
-      //    overflow: hidden;
-      //    .notice__middle{
-      //      flex: 1;
-      //      text-align: left;
-      //      overflow: hidden;
-      //      .notice__nickname{
-      //        font-size: .14rem;
-      //        color: $textColor;
-      //        margin-right: .03rem;
-      //      }
-      //      .notice__type{
-      //        font-size: .14rem;
-      //        color: $darkgray;
-      //      }
-      //      .tips__icon{
-      //        display: block;
-      //        font-size: .14rem;
-      //        color: $darkgray;
-      //      }
-      //      .notice__content{
-      //        margin: .02rem 0;
-      //        font-size: .12rem;
-      //        color: $darkgray;
-      //        display: inline-block;
-      //        max-width: 100%;
-      //        @include two-ellipsis;
-      //      }
-      //      .notice__time{
-      //        font-size: .12rem;
-      //        color: $darkgray;
-      //      }
-      //    }
-      //    .notice__right{
-      //      width: .55rem;
-      //      height: .55rem;
-      //      margin-left: .1rem;
-      //      color: $darkgray;
-      //      background: $content-bgColor;
-      //      @include three-ellipsis;
-      //    }
-      //  }
-      //}
+    }
+    :deep(sup) {
+      position: absolute;
+      top: -0.7rem;
+      left: 0.55rem;
     }
     .letter{
       &__item{
@@ -390,38 +305,6 @@ export default {
         }
       }
     }
-    //.official{
-    //  &__item{
-    //    display: flex;
-    //    padding-top: 0.1rem;
-    //    .official__avatar{
-    //      margin: 0 .15rem;
-    //      :deep(sup){
-    //        right: .5rem;
-    //      }
-    //    }
-    //    .official__right{
-    //      flex: 1;
-    //      overflow: hidden;
-    //      text-align: left;
-    //      .title__wrapper{
-    //        @include ellipsis;
-    //        .official__type{
-    //          font-size: .14rem;
-    //          color: $textColor;
-    //        }
-    //        .official__title{
-    //          font-size: .14rem;
-    //          color: $darkgray;
-    //        }
-    //      }
-    //      .official__time{
-    //        font-size: .12rem;
-    //        color: $darkgray;
-    //      }
-    //    }
-    //  }
-    //}
     .noMore{
       display: inline-block;
       margin: 0.15rem 0;
