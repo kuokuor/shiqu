@@ -25,6 +25,7 @@
         </div>
       </div>
     </div>
+    <div class="letter__bar">聊天列表</div>
     <div class="letter">
       <el-empty description="网络一线牵，主动才有缘~" v-if="!letterList || !letterList.length" />
       <div v-for="item in letterList" :key="item.id" class="letter__item" @click="toChat(item.from.id)">
@@ -113,13 +114,12 @@ export default {
         console.log('请求了私信')
         const result = await get('/message/getLetterList')
         if (result.code === 200 && result.data) {
-          const list = result.data
-          console.log('私信列表', list)
-          list.map((item) => {
-            const currentTime = new Date()
-            const isCurrentDay = currentTime.getDay() === moment(item.letter.lastTime).day() // 日期是否为今天
-            const isCurrentMonth = currentTime.getMonth() === moment(item.letter.lastTime).month() // 日期是否为本月
-            const isCurrentYear = currentTime.getFullYear() === moment(item.letter.lastTime).year() // 日期是否为今年
+          let list = result.data
+          list = list.map((item) => {
+            const currentTime = moment()
+            const isCurrentDay = currentTime.get('date') === moment(item.letter.lastTime).get('date') // 日期是否为今天
+            const isCurrentMonth = currentTime.get('month') === moment(item.letter.lastTime).get('month') // 日期是否为本月
+            const isCurrentYear = currentTime.get('year') === moment(item.letter.lastTime).get('year') // 日期是否为今年
             if (isCurrentDay && isCurrentMonth && isCurrentYear) { // 今天内的私信，显示时间
               item.letter.lastTime = moment(item.letter.lastTime).format('HH:mm')
             } else if (isCurrentYear) { // 今年内，显示具体月日
@@ -253,6 +253,15 @@ export default {
       position: absolute;
       top: -0.7rem;
       left: 0.55rem;
+    }
+    .letter__bar{
+      width: 100%;
+      height: .25rem;
+      line-height: .25rem;
+      padding-left: .05rem;
+      font-size: .13rem;
+      font-weight: bolder;
+      border-bottom: 1px solid #f1f1f1;
     }
     .letter{
       &__item{

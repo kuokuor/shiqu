@@ -134,19 +134,21 @@ const useInitDataEffect = (noteDetail) => {
             }
           })
         }
+
+        const currentTime = moment()
         // 格式化评论、回复的时间
         detail.comments.map((comment) => {
-          if (new Date().valueOf() - moment(comment.commentTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
+          if (currentTime.valueOf() - moment(comment.commentTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
             comment.commentTime = moment(comment.commentTime).fromNow()
-          } else if (new Date().getFullYear() === moment(comment.commentTime).year()) { // 超过36小时，显示月日
+          } else if (currentTime.get('year') === moment(comment.commentTime).get('year')) { // 超过36小时，显示月日
             comment.commentTime = moment(comment.commentTime).format('MM-DD')
           } else { // 超过一年，显示年月日
             comment.commentTime = moment(comment.commentTime).format('YY-MM-DD')
           }
           comment.reply.map((item) => {
-            if (new Date().valueOf() - moment(item.replyTime).valueOf() < 129600000) { // 36小时内
+            if (currentTime.valueOf() - moment(item.replyTime).valueOf() < 129600000) { // 36小时内
               item.replyTime = moment(item.replyTime).fromNow()
-            } else if (new Date().getFullYear() === moment(item.replyTime).year()) { // 超过36小时，显示月日
+            } else if (currentTime.get('year') === moment(item.replyTime).get('year')) { // 超过36小时，显示月日
               item.replyTime = moment(item.replyTime).format('MM-DD')
             } else { // 超过一年，显示年月日
               item.replyTime = moment(item.replyTime).format('YY-MM-DD')
@@ -157,9 +159,9 @@ const useInitDataEffect = (noteDetail) => {
         })
         // 格式化笔记时间
         console.log(moment(detail.note.editTime).format('YY-MM-DD HH:mm:ss'))
-        if (new Date().valueOf() - moment(detail.note.editTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
+        if (currentTime.valueOf() - moment(detail.note.editTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
           detail.note.editTime = moment(detail.note.editTime).fromNow()
-        } else if (new Date().getFullYear() === moment(detail.note.editTime).year()) { // 超过36小时，显示月日
+        } else if (currentTime.get('year') === moment(detail.note.editTime).get('year')) { // 超过36小时，显示月日
           detail.note.editTime = moment(detail.note.editTime).format('MM-DD')
         } else { // 超过一年，显示年月日
           detail.note.editTime = moment(detail.note.editTime).format('YY-MM-DD')

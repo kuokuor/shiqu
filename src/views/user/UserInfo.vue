@@ -117,16 +117,16 @@
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
           <!-- 0-未知 1-男 2-女 -->
-          <span class="iconfont unknown__icon" style="font-size: .16rem" v-if="item.user.sex === 0">&#xfb29;</span>
-          <span class="iconfont male__icon" style="font-size: .14rem" v-else-if="item.user.sex === 1">&#xe643;</span>
-          <span class="iconfont female__icon" style="font-size: .14rem" v-else >&#xe647;</span>
+          <span class="iconfont unknown__icon" style="font-size: .2rem" v-if="item.user.sex === 0">&#xfb29;</span>
+          <span class="iconfont male__icon" style="font-size: .15rem" v-else-if="item.user.sex === 1">&#xe643;</span>
+          <span class="iconfont female__icon" style="font-size: .15rem" v-else >&#xe647;</span>
         </div>
         <div v-if="item.user.id != holderUserId">
           <!-- 当前持有者是否关注用户 -->
           <el-button
             round
             class="follow__button"
-            style="width: .68rem"
+            style="width: .6rem"
             @click="handleFollowClick(item, false, userInfo.user?.id === holderUserId ? -1 : undefined)"
             v-if="item.hasFollowed"
           >
@@ -136,7 +136,7 @@
             type="primary"
             round
             class="follow__button"
-            style="width: .68rem"
+            style="width: .6rem"
             @click="handleFollowClick(item, true, userInfo.user?.id === holderUserId ? 1 : undefined)"
             v-else
           >
@@ -155,16 +155,16 @@
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
           <!-- 性别图标 [考虑添加] -->
-          <span class="iconfont unknown__icon" style="font-size: .16rem" v-if="item.user.sex === 0">&#xfb29;</span>
-          <span class="iconfont male__icon" style="font-size: .14rem" v-else-if="item.user.sex === 1">&#xe643;</span>
-          <span class="iconfont female__icon" style="font-size: .14rem" v-else >&#xe647;</span>
+          <span class="iconfont unknown__icon" style="font-size: .2rem" v-if="item.user.sex === 0">&#xfb29;</span>
+          <span class="iconfont male__icon" style="font-size: .15rem" v-else-if="item.user.sex === 1">&#xe643;</span>
+          <span class="iconfont female__icon" style="font-size: .15rem" v-else >&#xe647;</span>
         </div>
         <div v-if="item.user.id != holderUserId">
           <!-- 当前持有者是否关注用户 -->
           <el-button
             round
             class="follow__button"
-            style="width: .68rem"
+            style="width: .6rem"
             @click="handleFollowClick(item, false, userInfo.user?.id === holderUserId ? -1 : undefined)"
             v-if="item.hasFollowed"
           >
@@ -174,7 +174,7 @@
             type="primary"
             round
             class="follow__button"
-            style="width: .68rem"
+            style="width: .6rem"
             @click="handleFollowClick(item, true, userInfo.user?.id === holderUserId ? 1 : undefined)"
             v-else
           >
@@ -762,13 +762,17 @@ export default {
       }
     }
     .nickname__wrapper{
-      width: 1.34rem;
+      width: 1.44rem;
       padding: 0 0.1rem;
       text-align: left;
       font-size: .15rem;
-      @include ellipsis;
       .nickname{
+        position: relative;
+        bottom: -0.04rem;
+        display: inline-block;
         margin-right: .05rem;
+        max-width: 80%;
+        @include ellipsis;
       }
     }
     .follow__button{

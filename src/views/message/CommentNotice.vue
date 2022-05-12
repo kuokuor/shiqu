@@ -66,10 +66,10 @@ export default {
             isEmpty.value = true
           }
           list = list.map(item => {
-            const currentTime = new Date()
-            const isCurrentDay = currentTime.getDay() === moment(item.time).day() // 日期是否为今天
-            const isCurrentMonth = currentTime.getMonth() === moment(item.time).month() // 日期是否为本月
-            const isCurrentYear = currentTime.getFullYear() === moment(item.time).year() // 日期是否为今年
+            const currentTime = moment()
+            const isCurrentDay = currentTime.get('date') === moment(item.time).get('date') // 日期是否为今天
+            const isCurrentMonth = currentTime.get('month') === moment(item.time).get('month') // 日期是否为本月
+            const isCurrentYear = currentTime.get('year') === moment(item.time).get('year') // 日期是否为今年
             if (isCurrentDay && isCurrentMonth && isCurrentYear) { // 今天内的通知，显示时间
               item.time = moment(item.time).format('HH:mm')
             } else if (isCurrentYear) { // 今年内，显示具体月日
