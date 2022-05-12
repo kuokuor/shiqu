@@ -74,7 +74,7 @@ export default {
       }
     }
 
-    const currentPage = ref(1) // 当前加载页
+    const currentPage = ref(0) // 当前加载页
     const noMore = ref(false) // 没有更多内容
     const noteList = ref([]) // 搜索出来的笔记
     const load = ref(false) // 加载中
@@ -82,7 +82,7 @@ export default {
     // 获取笔记列表
     const getNoteList = async (refresh) => {
       if (refresh) {
-        currentPage.value = 1
+        currentPage.value = 0
       }
       try {
         const formData = new FormData()
@@ -94,7 +94,7 @@ export default {
         } else {
           formData.append('type', 2)
         }
-        formData.append('current', currentPage.value - 1)
+        formData.append('current', currentPage.value)
         formData.append('limit', 10)
         const result = await post('/note/search', formData)
         if (result.code === 200 && result.data) {
@@ -108,7 +108,7 @@ export default {
             noMore.value = true
           } else { // 还有笔记
             noMore.value = false
-            currentPage.value += list.length
+            currentPage.value += 1
           }
           // 刷新笔记列表
           if (refresh) {
@@ -201,9 +201,6 @@ export default {
           loadMore.value = false
           console.log('加载完了，loadMore', loadMore.value)
         }
-      } else {
-        console.log('没滑到底部')
-        loadMore.value = false
       }
     }
 

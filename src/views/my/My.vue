@@ -95,7 +95,7 @@
     </div>
     <docker :currentIndex="4" />
     <el-drawer v-model="followDrawer" title="followList" :with-header="false" size="75%">
-      <div class="title">TA关注的人</div>
+      <div class="title">我的关注</div>
       <div class="list__wrapper" v-for="item in followList" :key="item.user.id">
         <div class="avatar">
           <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
@@ -114,7 +114,7 @@
           class="follow__button"
           style="width: .68rem"
           @click="handleFollowClick(item, false, -1)"
-          v-if="item.followed"
+          v-if="item.hasFollowed"
         >
           已关注
         </el-button>
@@ -131,7 +131,7 @@
       </div>
     </el-drawer>
     <el-drawer v-model="fansDrawer" title="fansList" :with-header="false" size="75%">
-      <div class="title">关注TA的人</div>
+      <div class="title">我的粉丝</div>
       <div class="list__wrapper" v-for="item in fansList" :key="item.user.id">
         <div class="avatar">
           <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
@@ -149,7 +149,7 @@
           class="follow__button"
           style="width: .68rem"
           @click="handleFollowClick(item, false, -1)"
-          v-if="item.followed"
+          v-if="item.hasFollowed"
         >
           已关注
         </el-button>
@@ -412,9 +412,9 @@ export default {
         // 发送修改关注状态的请求
         const result = await post('/user/changeFollowed', formData)
         if (result.code === 200) {
-          userData.followed = followed
-          if (typeof userData.fansCount === 'number') {
-            userData.fansCount += count
+          userData.hasFollowed = followed
+          if (typeof userInfo.value.followCount === 'number') {
+            userInfo.value.followCount += count
           }
         } else {
           ElMessage({
@@ -565,9 +565,6 @@ export default {
           loadMore.value[activeTab.value] = false
           console.log('加载完了，loadMore', loadMore.value)
         }
-      } else {
-        console.log('没滑到底部')
-        loadMore.value[activeTab.value] = false
       }
     }
 

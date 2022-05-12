@@ -175,9 +175,8 @@ export default {
       const scrollTop = mainDiv.value.scrollTop
       const scrollHeight = mainDiv.value.firstChild.scrollHeight
       const clientHeight = mainDiv.value.clientHeight
-      console.log(scrollTop, clientHeight, scrollTop + clientHeight, scrollHeight)
-      // 判断是否滑到底部
-      if (scrollTop + clientHeight >= scrollHeight - 1) {
+      // 判断是否滑到底部（还要判断当前笔记列表中有无内容，有内容才能加载更多）
+      if (scrollTop + clientHeight >= scrollHeight - 1 && noteList.value[activeIndex.value].length) {
         console.log('滑到底部了')
         if (!noMore.value[activeIndex.value]) { // 未加载完
           loadMore.value[activeIndex.value] = true
@@ -187,9 +186,6 @@ export default {
           loadMore.value[activeIndex.value] = false
           console.log('加载完了，loadMore', loadMore.value)
         }
-      } else {
-        console.log('没滑到底部')
-        loadMore.value[activeIndex.value] = false
       }
     }
 

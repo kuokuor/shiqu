@@ -22,9 +22,6 @@
           <span class="notice__content">{{ item.from.description }}</span>
           <span class="notice__time">{{item.time}}</span>
         </div>
-        <div class="notice__right">
-          <span class="notice__target">{{item.followed}}</span>
-        </div>
       </div>
     </div>
     <span class="noMore" v-if="followNoticeList.length">没有更多啦~</span>
@@ -169,13 +166,11 @@ export default {
     }
     .notice__wrapper{
       flex: 1;
-      display: flex;
       margin-right: .1rem;
       padding-bottom: .05rem;
       border-bottom: 1px solid $content-bgColor;
       overflow: hidden;
       .notice__middle{
-        flex: 1;
         text-align: left;
         overflow: hidden;
         .notice__nickname{
@@ -204,14 +199,6 @@ export default {
           font-size: .12rem;
           color: $darkgray;
         }
-      }
-      .notice__right{
-        width: .55rem;
-        height: .55rem;
-        margin-left: .1rem;
-        color: $darkgray;
-        background: $content-bgColor;
-        @include three-ellipsis;
       }
     }
   }

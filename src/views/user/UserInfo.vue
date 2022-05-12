@@ -108,7 +108,8 @@
       </el-tabs>
     </div>
     <el-drawer v-model="followDrawer" title="followList" :with-header="false" size="75%">
-      <div class="title">TA关注的人</div>
+      <div class="title" v-if="userInfo.user?.id != holderUserId">TA关注的人</div>
+      <div class="title" v-else>我的关注</div>
       <div class="list__wrapper" v-for="item in followList" :key="item.user.id">
         <div class="avatar">
           <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
@@ -120,31 +121,33 @@
           <span class="iconfont male__icon" style="font-size: .14rem" v-else-if="item.user.sex === 1">&#xe643;</span>
           <span class="iconfont female__icon" style="font-size: .14rem" v-else >&#xe647;</span>
         </div>
-        <!-- 性别图标 [考虑添加] -->
-        <!-- 当前持有者是否关注用户 -->
-        <el-button
-          round
-          class="follow__button"
-          style="width: .68rem"
-          @click="handleFollowClick(item, false, -1)"
-          v-if="item.followed"
-        >
-          已关注
-        </el-button>
-        <el-button
-          type="primary"
-          round
-          class="follow__button"
-          style="width: .68rem"
-          @click="handleFollowClick(item, true, 1)"
-          v-else
-        >
-          + 关注
-        </el-button>
+        <div v-if="item.user.id != holderUserId">
+          <!-- 当前持有者是否关注用户 -->
+          <el-button
+            round
+            class="follow__button"
+            style="width: .68rem"
+            @click="handleFollowClick(item, false, userInfo.user?.id === holderUserId ? -1 : undefined)"
+            v-if="item.hasFollowed"
+          >
+            已关注
+          </el-button>
+          <el-button
+            type="primary"
+            round
+            class="follow__button"
+            style="width: .68rem"
+            @click="handleFollowClick(item, true, userInfo.user?.id === holderUserId ? 1 : undefined)"
+            v-else
+          >
+            + 关注
+          </el-button>
+        </div>
       </div>
     </el-drawer>
     <el-drawer v-model="fansDrawer" title="fansList" :with-header="false" size="75%">
-      <div class="title">关注TA的人</div>
+      <div class="title" v-if="userInfo.user?.id != holderUserId">关注TA的人</div>
+      <div class="title" v-else>我的粉丝</div>
       <div class="list__wrapper" v-for="item in fansList" :key="item.user.id">
         <div class="avatar">
           <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
@@ -156,26 +159,28 @@
           <span class="iconfont male__icon" style="font-size: .14rem" v-else-if="item.user.sex === 1">&#xe643;</span>
           <span class="iconfont female__icon" style="font-size: .14rem" v-else >&#xe647;</span>
         </div>
-        <!-- 当前持有者是否关注用户 -->
-        <el-button
-          round
-          class="follow__button"
-          style="width: .68rem"
-          @click="handleFollowClick(item, false, -1)"
-          v-if="item.followed"
-        >
-          已关注
-        </el-button>
-        <el-button
-          type="primary"
-          round
-          class="follow__button"
-          style="width: .68rem"
-          @click="handleFollowClick(item, true, 1)"
-          v-else
-        >
-          + 关注
-        </el-button>
+        <div v-if="item.user.id != holderUserId">
+          <!-- 当前持有者是否关注用户 -->
+          <el-button
+            round
+            class="follow__button"
+            style="width: .68rem"
+            @click="handleFollowClick(item, false, userInfo.user?.id === holderUserId ? -1 : undefined)"
+            v-if="item.hasFollowed"
+          >
+            已关注
+          </el-button>
+          <el-button
+            type="primary"
+            round
+            class="follow__button"
+            style="width: .68rem"
+            @click="handleFollowClick(item, true, userInfo.user?.id === holderUserId ? 1 : undefined)"
+            v-else
+          >
+            + 关注
+          </el-button>
+        </div>
       </div>
     </el-drawer>
   </div>
@@ -421,15 +426,29 @@ export default {
 
     // 关注
     const handleFollowClick = async (userData, followed, count) => {
+      console.log(userData, followed, count)
       try {
         const formData = new FormData()
         formData.append('userId', userData.user.id)
         // 发送修改关注状态的请求
         const result = await post('/user/changeFollowed', formData)
         if (result.code === 200) {
-          userData.followed = followed
-          if (typeof userData.fansCount === 'number') {
-            userData.fansCount += count
+          // 判断当前用户是否为持有者，如果是，则修改关注数
+          if (userInfo.value.user.id === holderUserId.value) {
+            userData.hasFollowed = followed
+            if (typeof userInfo.value.followCount === 'number') {
+              userInfo.value.followCount += count
+            }
+          } else { // 不是持有者
+            if (count !== undefined) { // 对当前用户进行(取消)关注
+              userData.followed = followed
+              // 更新当前用户的粉丝数
+              if (typeof userData.fansCount === 'number') {
+                userData.fansCount += count
+              }
+            } else { // 对当前用户的关注/粉丝列表中的用户进行(取消)关注
+              userData.hasFollowed = followed
+            }
           }
         } else {
           ElMessage({
@@ -576,9 +595,6 @@ export default {
           loadMore.value[activeTab.value] = false
           console.log('加载完了，loadMore', loadMore.value)
         }
-      } else {
-        console.log('没滑到底部')
-        loadMore.value[activeTab.value] = false
       }
     }
 
