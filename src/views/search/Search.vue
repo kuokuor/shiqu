@@ -7,16 +7,17 @@
     <div class="search__input">
       <el-input
         v-model="searchText"
-        placeholder="搜索笔记"
+        placeholder="搜索笔记/用户"
         class="input-with-select"
         @input="inputText"
         @keyup.enter="handleSearchClick"
       >
         <template #prepend>
           <el-select v-model="type">
+            <el-option label="全部" value="全部"/>
             <el-option label="美食笔记" value="美食笔记" />
             <el-option label="探店笔记" value="探店笔记" />
-            <el-option label="全部" value="全部"/>
+            <el-option label="用户" value="用户"/>
           </el-select>
         </template>
       </el-input>
@@ -25,7 +26,7 @@
   </div>
   <div class="main" ref="mainDiv">
     <el-empty description="没有搜索到相关内容" v-if="isEmpty" />
-    <div v-else>
+    <div v-else-if="noteList.length > 0">
       <div class="wrapper">
         <div
           v-for="item in noteList"
@@ -36,20 +37,65 @@
         </div>
       </div>
       <load-more v-if="loadMore" />
-      <div class="noMore" v-if="!loadMore && noMore">哎呀 已经到底啦~</div>
+      <div class="noMore" v-show="!loadMore && noMore">哎呀 已经到底啦~</div>
+    </div>
+    <div v-else>
+      <div class="list__wrapper">
+        <div
+          v-for="item in userList"
+          :key="item.id"
+          class="user__wrapper"
+          @click="handleUserClick(item.id)"
+        >
+          <div class="avatar">
+            <el-avatar style="--el-avatar-size: .4rem;" :src="item.avatar" />
+          </div>
+          <div class="nickname__wrapper">
+            <span class="nickname">{{ item.nickname }}</span>
+            <!-- 0-未知 1-男 2-女 -->
+            <span class="iconfont unknown__icon" style="font-size: .2rem" v-if="item.sex === 0">&#xfb29;</span>
+            <span class="iconfont male__icon" style="font-size: .15rem" v-else-if="item.sex === 1">&#xe643;</span>
+            <span class="iconfont female__icon" style="font-size: .15rem" v-else >&#xe647;</span>
+          </div>
+          <div v-if="item.id != holderId">
+            <!-- 当前持有者是否关注用户 -->
+            <el-button
+              round
+              class="follow__button"
+              style="width: .6rem"
+              @click.stop="handleFollowClick(item, false)"
+              v-if="item.hasFollowed"
+            >
+              已关注
+            </el-button>
+            <el-button
+              type="primary"
+              round
+              class="follow__button"
+              style="width: .6rem"
+              @click.stop="handleFollowClick(item, true)"
+              v-else
+            >
+              + 关注
+            </el-button>
+          </div>
+        </div>
+      </div>
+      <div class="noMore" v-show="userList.length">哎呀 已经到底啦~</div>
     </div>
   </div>
 </template>
 
 <script>
 import { ref } from 'vue'
-import { post } from '../../utils/request'
+import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
 import Loading from '../../components/Loading.vue'
 import Contents from '../home/Contents.vue'
 import LoadMore from '../../components/loadMore.vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Search',
@@ -91,7 +137,7 @@ export default {
           formData.append('type', 0)
         } else if (type.value === '美食笔记') {
           formData.append('type', 1)
-        } else {
+        } else if (type.value === '探店笔记') {
           formData.append('type', 2)
         }
         formData.append('current', currentPage.value)
@@ -139,6 +185,64 @@ export default {
       }
     }
 
+    const holderId = ref('') // 持有者id
+    const getHolderId = async () => {
+      try {
+        const result = await get('/user/getHolderUserId')
+        if (result.code === 200 && result.data) {
+          holderId.value = result.data
+          console.log('持有者id', holderId.value)
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
+    const userList = ref([]) // 搜索出来的用户
+    // 获取用户列表
+    const getUserList = async () => {
+      try {
+        const formData = new FormData()
+        formData.append('key', searchText.value)
+        const result = await post('/user/searchByNickname', formData)
+        if (result.code === 200 && result.data) {
+          userList.value = result.data
+          load.value = false // 获取数据成功，关闭loading效果
+          console.log('搜索到的用户', userList.value)
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
     // 节流函数
     let pre = 0 // 前一次任务触发时间
     const throttle = (func, delay) => {
@@ -158,13 +262,25 @@ export default {
         return
       }
       load.value = true // 开启loading动画效果
-      await getNoteList(true)
-      // 笔记列表为空，设置空状态；否则展示笔记列表
-      console.log(noteList.value.length)
-      if (!noteList.value.length) {
-        isEmpty.value = true
+      if (type.value === '用户') {
+        getHolderId()
+        await getUserList()
+        if (!userList.value.length) {
+          isEmpty.value = true
+        } else {
+          isEmpty.value = false
+        }
+        noteList.value = [] // 清空笔记列表
       } else {
-        isEmpty.value = false
+        await getNoteList(true)
+        // 笔记列表为空，设置空状态；否则展示笔记列表
+        console.log(noteList.value.length)
+        if (!noteList.value.length) {
+          isEmpty.value = true
+        } else {
+          isEmpty.value = false
+        }
+        userList.value = [] // 清空用户列表
       }
       mainDiv.value.scrollTop = 0
       mainDiv.value.addEventListener('scroll', scrollToBottom)
@@ -204,6 +320,42 @@ export default {
       }
     }
 
+    // 进入用户资料页
+    const router = useRouter()
+    const handleUserClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
+    // 关注用户
+    const handleFollowClick = async (user, followed) => {
+      console.log(user, followed)
+      try {
+        const formData = new FormData()
+        formData.append('userId', user.id)
+        // 发送修改关注状态的请求
+        const result = await post('/user/changeFollowed', formData)
+        if (result.code === 200) {
+          user.hasFollowed = followed
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
     return {
       searchText,
       type,
@@ -211,13 +363,17 @@ export default {
       hasText,
       inputText,
       noteList,
+      userList,
+      holderId,
       mainDiv,
       load,
       loadMore,
       noMore,
       isEmpty,
       handleSearchClick,
-      changeLiked
+      changeLiked,
+      handleUserClick,
+      handleFollowClick
     }
   }
 }
@@ -225,6 +381,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../style/viriables.scss';
+@import '../../style/mixins.scss';
   .search__wrapper{
     position: fixed;
     top: 0;
@@ -330,5 +487,50 @@ export default {
     width: 100%;
     height: .4rem;
     line-height: .4rem;
+  }
+  .list__wrapper{
+    padding: 0 .2rem;
+    background: $bgColor;
+  }
+  .user__wrapper{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    .avatar{
+      width: .4rem;
+      :deep(.el-avatar){
+        position: relative;
+        top: 0.02rem;
+      }
+    }
+    .nickname__wrapper{
+      width: 2.35rem;
+      padding: 0 0.1rem;
+      text-align: left;
+      font-size: .15rem;
+      .nickname{
+        position: relative;
+        bottom: -0.04rem;
+        display: inline-block;
+        margin-right: .05rem;
+        max-width: 90%;
+        @include ellipsis;
+      }
+    }
+    .follow__button{
+      :deep(.el-button){
+        height: .32rem;
+        font-size: .12rem;
+      }
+      :deep(.el-button.is-round){
+        border-radius: .16rem;
+      }
+      :deep(.el-button:focus, .el-button:hover, el-button:active){
+        color: var(--el-button-text-color);
+        border-color: var(--el-button-border-color);
+        background-color: var(--el-button-bg-color);
+      }
+    }
   }
 </style>
