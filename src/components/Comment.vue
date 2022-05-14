@@ -6,7 +6,7 @@
       </div>
       <div class="middle">
         <span class="nickname">{{comment.user.nickname}}</span>
-        <p class="text">{{comment.commentText}}</p>
+        <p class="text" @click="handleTextClick(comment.id, comment.user.id, comment.id)">{{comment.commentText}}</p>
         <span class="commentTime">{{comment.commentTime}}</span>
       </div>
       <div class="like">
@@ -20,13 +20,18 @@
       </div>
     </div>
     <div class="reply__wrapper">
-      <div class="reply__item" v-for="(item, index) in comment.reply" :key="item.id" v-show="tips === '收起' ? true : (index < 2)">
+      <div
+        class="reply__item"
+        v-for="(item, index) in comment.reply"
+        :key="item.id"
+        v-show="tips === '收起' ? true : (index < 2)"
+      >
         <div class="reply__avatar">
           <el-avatar style="--el-avatar-size: .3rem" :src="item?.user.avatar" @click="handleAvatarClick(item?.user.id)" />
         </div>
         <div class="reply__middle">
           <span class="user__nickname">{{item?.user.nickname}}</span>
-          <p><span class="reply__tip" v-if="item?.target != null">回复 <span class="target__nickname">{{item?.target.nickname}}</span>: </span><span class="text">{{item?.replyText}}</span></p>
+          <p @click="handleTextClick(comment.id, item.user.id, item.id)"><span class="reply__tip" v-if="item?.target != null">回复 <span class="target__nickname">{{item?.target.nickname}}</span>: </span><span class="text">{{item?.replyText}}</span></p>
           <span class="replyTime">{{item?.replyTime}}</span>
         </div>
         <div class="reply__like">
@@ -41,6 +46,31 @@
       </div>
       <span class="expand__tips" v-show="comment.reply?.length > 2" v-html="tips" @click="handleExpandClick"></span>
     </div>
+
+    <el-drawer v-model="drawer" direction="btt" :with-header="false" size="15%">
+      <div class="operation__drawer">
+        <div class="drawer__item" @click="handleReplyClick">回复</div>
+        <div class="drawer__item" @click="handleDeleteClick">删除</div>
+        <div class="drawer__item" @click="handleCancelClick">取消</div>
+      </div>
+    </el-drawer>
+
+    <!-- 点击删除按钮后出现对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title=""
+      width="70%"
+      custom-class="delete__dialog"
+      :show-close="false"
+    >
+      <span class="dialog__title">确定删除?</span>
+      <template #footer>
+        <div class="dialog-footer">
+          <span class="cancel" @click="handleCancel">取消</span>
+          <span class="delete" @click="handleDelete">删除</span>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -120,7 +150,7 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
   }
 
   // 处理点赞回复的事件
-  const handleReplyLikeClick = async (contentId, replyId, replyUserId, index, liked) => {
+  const handleReplyLikeClick = async (commentId, replyId, replyUserId, index, liked) => {
     try {
       const formData = new FormData()
       formData.append('entityType', 2)
@@ -133,11 +163,11 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
         if (!liked) {
           // liked = true
           replyIcon.value[index] = '&#xe6aa;'
-          emit('changeCommentLiked', contentId, replyId, true, 1)
+          emit('changeCommentLiked', commentId, replyId, true, 1)
         } else {
           // liked = false
           replyIcon.value[index] = '&#xe6a9;'
-          emit('changeCommentLiked', contentId, replyId, false, -1)
+          emit('changeCommentLiked', commentId, replyId, false, -1)
         }
       } else {
         ElMessage({
@@ -176,7 +206,7 @@ const useUserAvatarEffect = () => {
 
 export default {
   name: 'Comment',
-  props: ['comment', 'noteId'],
+  props: ['comment', 'noteId', 'holderId', 'refresh'],
   setup (props, context) {
     console.log(props.comment)
     const icon = props.comment.liked ? ref('&#xe6aa;') : ref('&#xe6a9;') // 评论的点赞图标
@@ -197,6 +227,76 @@ export default {
 
     const { handleAvatarClick } = useUserAvatarEffect()
 
+    const drawer = ref(false) // 控制el-drawer显示
+    const entityId = ref('') // 实体id(笔记或首层评论的id)
+    const targetId = ref('') // 目标用户id
+    const targetCommentId = ref('') // 目标评论id
+    // 回复操作
+    const handleReplyClick = () => {
+      drawer.value = false // 关闭el-drawer抽屉
+      context.emit('handleInputComment') // 唤起输入框
+      context.emit('updateData', 2, entityId.value, targetId.value) // 传给父组件需要的数据
+    }
+    // 点击评论触发的事件
+    const handleTextClick = (entityId1, targetId1, targetCommentId1) => {
+      console.log('进行回复', entityId)
+      if (targetId1 === props.holderId) { // 本人发的评论
+        drawer.value = true
+      } else { // 非本人的评论
+        handleReplyClick()
+      }
+      entityId.value = entityId1
+      targetId.value = targetId1
+      targetCommentId.value = targetCommentId1
+    }
+
+    const deleteDialogVisible = ref(false) // 控制删除对话框的显示
+    // 点击el-drawer中的删除按钮
+    const handleDeleteClick = () => {
+      drawer.value = false // 关闭el-drawer抽屉
+      deleteDialogVisible.value = true // 显示删除对话框
+    }
+
+    // 点击el-drawer中的取消按钮
+    const handleCancelClick = () => {
+      drawer.value = false // 关闭el-drawer抽屉
+    }
+
+    // 点击删除对话框中的取消按钮
+    const handleCancel = () => {
+      deleteDialogVisible.value = false // 关闭删除对话框
+    }
+
+    // 点击删除对话框中的删除按钮（确认删除）
+    const handleDelete = async () => {
+      try {
+        const formData = new FormData()
+        formData.append('commentId', targetCommentId.value)
+        const result = await post('/note/deleteComment', formData)
+        if (result.code === 200) {
+          props.refresh() // 刷新
+        } else {
+          deleteDialogVisible.value = false // 关闭删除对话框
+          ElMessage({
+            showClose: true,
+            message: '错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        deleteDialogVisible.value = false // 关闭删除对话框
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
     return {
       icon,
       replyIcon,
@@ -204,7 +304,15 @@ export default {
       handleReplyLikeClick,
       tips,
       handleExpandClick,
-      handleAvatarClick
+      handleAvatarClick,
+      drawer,
+      handleTextClick,
+      handleReplyClick,
+      handleDeleteClick,
+      handleCancelClick,
+      deleteDialogVisible,
+      handleCancel,
+      handleDelete
     }
   }
 }
@@ -334,6 +442,45 @@ export default {
         position: relative;
         left: .38rem;
         font-size: .12rem;
+        color: $themeColor;
+      }
+    }
+  }
+  :deep(.el-overlay){
+    background-color: transparent !important;
+  }
+  .operation__drawer{
+    margin: -20px;
+    height: 1.2rem;
+  }
+  .drawer__item{
+    width: 100%;
+    height: .4rem;
+    line-height: .4rem;
+    font-size: .15rem;
+  }
+
+  :deep(.delete__dialog){
+    border-radius: .05rem;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .dialog__title{
+      font-size: .16rem;
+    }
+    .dialog-footer{
+      display: flex;
+      font-size: .16rem;
+      .cancel{
+        flex: 1;
+        text-align: center;
+        color: $textColor;
+      }
+      .delete{
+        flex: 1;
+        text-align: center;
         color: $themeColor;
       }
     }

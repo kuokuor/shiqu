@@ -1,90 +1,126 @@
 <template>
   <loading v-if="load" />
-  <div class="header">
-    <div class="back">
-      <a class="iconfont back__icon" @click="handleBackClick">&#xe600;</a>
-    </div>
-    <div class="author">
-      <div class="avatar">
-        <el-avatar style="--el-avatar-size: .4rem" :src="noteDetail.author?.avatar" @click="handleAvatarClick(noteDetail.author?.id)" />
+  <div class="wrapper">
+    <div class="header">
+      <div class="back">
+        <a class="iconfont back__icon" @click="handleBackClick">&#xe600;</a>
       </div>
-      <div class="wrapper">
-        <span class="nickname">{{noteDetail.author?.nickname}}</span>
-        <span class="editTime">{{noteDetail.note?.editTime}}</span>
+      <div class="author">
+        <div class="avatar">
+          <el-avatar style="--el-avatar-size: .4rem" :src="noteDetail.author?.avatar" @click="handleAvatarClick(noteDetail.author?.id)" />
+        </div>
+        <div class="wrapper">
+          <span class="nickname">{{noteDetail.author?.nickname}}</span>
+          <span class="editTime">{{noteDetail.note?.editTime}}</span>
+        </div>
+        <el-button v-show="noteDetail.author?.id != holderId" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
       </div>
-      <el-button v-show="noteDetail.author?.id != holder.id" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
+      <div class="more" v-if="noteDetail.author?.id === holderId">
+        <a class="iconfont more__icon" @click.prevent="handleMoreClick">&#xe6ad;</a>
+      </div>
     </div>
-    <div class="more">
-      <a class="iconfont more__icon">&#xe6ad;</a>
+    <div class="main">
+      <div class="detail">
+        <div class="imgGroup">
+          <swiper
+            class="swiper"
+            :modules="modules"
+            :slides-per-view="1"
+            pagination
+            ref="mySwiper"
+          >
+            <swiper-slide class="image__wrapper" v-for="(item, index) in noteDetail.images" :key="index">
+              <img  class="image" :src="item">
+            </swiper-slide>
+          </swiper>
+        </div>
+        <div class="text">
+          <div class="title">{{noteDetail.note?.title}}</div>
+          <p class="content">{{noteDetail.note?.content}}</p>
+        </div>
+      </div>
+      <div class="comments">
+        <div class="comments__total">{{`共${noteDetail.commentCount}条评论`}}</div>
+        <!-- 评论列表 -->
+        <div v-for="item in noteDetail.comments" :key="item.id">
+          <comment
+            :comment="item"
+            :noteId="noteDetail.note.id"
+            :holderId="holderId"
+            :refresh="refresh"
+            @changeCommentLiked="changeCommentLiked"
+            @handleInputComment="handleInputComment"
+            @updateData="updateData"
+          />
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="main">
-    <div class="detail">
-      <div class="imgGroup">
-        <swiper
-          class="swiper"
-          :modules="modules"
-          :slides-per-view="1"
-          pagination
-          ref="mySwiper"
+    <div class="footer" v-show="!sendDrawer">
+      <div class="comment__input">
+        <input placeholder="说亿点好听的~" @focus="handleInputComment" />
+      </div>
+      <div class="like">
+        <span
+          :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': noteDetail.note?.liked}"
+          v-html="likedIcon"
+          @click="handleLikeClick(noteDetail.note?.liked)"
         >
-          <swiper-slide class="image__wrapper" v-for="(item, index) in noteDetail.images" :key="index">
-            <img  class="image" :src="item">
-          </swiper-slide>
-        </swiper>
+        </span>
+        <span class="like__count">{{noteDetail.note?.likeCount}}</span>
       </div>
-      <div class="text">
-        <div class="title">{{noteDetail.note?.title}}</div>
-        <p class="content">{{noteDetail.note?.content}}</p>
+      <div class="collect">
+        <span
+          :class="{'iconfont': true, 'collect__icon': true, 'collect__icon--active': noteDetail.note?.collected}"
+          v-html="collectedIcon"
+          @click="handleCollectClick(noteDetail.note?.collected)"
+        >
+        </span>
+        <span class="collect__count">{{noteDetail.note?.collectCount}}</span>
+      </div>
+      <div class="comment">
+        <span class="iconfont comment__icon" @click="handleCommentClick()">&#xe8b4;</span>
+        <span class="comment__count">{{noteDetail.commentCount}}</span>
       </div>
     </div>
-    <div class="comments">
-      <div class="comments__total">{{`共${noteDetail.commentCount}条评论`}}</div>
-      <!-- 评论列表 -->
-      <div v-for="item in noteDetail.comments" :key="item.id">
-        <comment :comment="item" :noteId="noteDetail.note.id" @changeCommentLiked="changeCommentLiked"/>
+    <el-drawer v-model="sendDrawer" direction="btt" :with-header="false" size="6%">
+      <div class="input__wrapper">
+        <div class="comment__input">
+          <input v-model="inputValue" ref="inputRef" placeholder="说亿点好听的~" />
+        </div>
+        <span class="send" @click="handleSendClick">发送</span>
       </div>
-    </div>
-  </div>
-  <div class="footer" v-show="!inputting">
-    <div class="comment__input">
-      <input placeholder="说亿点好听的~" @focus="handleInputComment" />
-    </div>
-    <div class="like">
-      <span
-        :class="{'iconfont': true, 'like__icon': true, 'like__icon--active': noteDetail.note?.liked}"
-        v-html="likedIcon"
-        @click="handleLikeClick(noteDetail.note?.liked)"
-      >
-      </span>
-      <span class="like__count">{{noteDetail.note?.likeCount}}</span>
-    </div>
-    <div class="collect">
-      <span
-        :class="{'iconfont': true, 'collect__icon': true, 'collect__icon--active': noteDetail.note?.collected}"
-        v-html="collectedIcon"
-        @click="handleCollectClick(noteDetail.note?.collected)"
-      >
-      </span>
-      <span class="collect__count">{{noteDetail.note?.collectCount}}</span>
-    </div>
-    <div class="comment">
-      <span class="iconfont comment__icon" @click="handleCommentClick()">&#xe8b4;</span>
-      <span class="comment__count">{{noteDetail.commentCount}}</span>
-    </div>
-  </div>
-  <div class="input__wrapper" v-show="inputting" ref="inputWrapperRef">
-    <div class="comment__input">
-      <input v-model="inputValue" ref="inputRef" placeholder="说亿点好听的~" />
-    </div>
-    <span class="send" @click="handleSendClick">发送</span>
+    </el-drawer>
+
+    <el-drawer v-model="drawer" direction="btt" :with-header="false" size="15%">
+      <div class="operation__drawer">
+        <div class="drawer__item" @click="handleEditClick">重新编辑</div>
+        <div class="drawer__item" @click="handleDeleteClick">删除</div>
+        <div class="drawer__item" @click="handleCancelClick">取消</div>
+      </div>
+    </el-drawer>
+
+    <!-- 点击删除按钮后出现对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title=""
+      width="70%"
+      custom-class="delete__dialog"
+      :show-close="false"
+    >
+      <span class="dialog__title">确定删除?</span>
+      <template #footer>
+        <div class="dialog-footer">
+          <span class="cancel" @click="handleCancel">取消</span>
+          <span class="delete" @click="handleDelete">删除</span>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
-import { useClickOutside } from '../../effects/useClickOutsideEffect'
-import { ref, onMounted, watch, nextTick, reactive } from 'vue'
+import { ref, onMounted, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { post, get } from '../../utils/request'
 import { ElMessage } from 'element-plus'
@@ -137,7 +173,7 @@ const useInitDataEffect = (noteDetail) => {
 
         const currentTime = moment()
         // 格式化评论、回复的时间
-        detail.comments.map((comment) => {
+        detail.comments = detail.comments.map((comment) => {
           if (currentTime.valueOf() - moment(comment.commentTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
             comment.commentTime = moment(comment.commentTime).fromNow()
           } else if (currentTime.get('year') === moment(comment.commentTime).get('year')) { // 超过36小时，显示月日
@@ -145,7 +181,7 @@ const useInitDataEffect = (noteDetail) => {
           } else { // 超过一年，显示年月日
             comment.commentTime = moment(comment.commentTime).format('YY-MM-DD')
           }
-          comment.reply.map((item) => {
+          comment.reply = comment.reply.map((item) => {
             if (currentTime.valueOf() - moment(item.replyTime).valueOf() < 129600000) { // 36小时内
               item.replyTime = moment(item.replyTime).fromNow()
             } else if (currentTime.get('year') === moment(item.replyTime).get('year')) { // 超过36小时，显示月日
@@ -158,7 +194,6 @@ const useInitDataEffect = (noteDetail) => {
           return comment
         })
         // 格式化笔记时间
-        console.log(moment(detail.note.editTime).format('YY-MM-DD HH:mm:ss'))
         if (currentTime.valueOf() - moment(detail.note.editTime).valueOf() < 129600000) { // 36小时内，显示xx秒/分钟/小时/天前
           detail.note.editTime = moment(detail.note.editTime).fromNow()
         } else if (currentTime.get('year') === moment(detail.note.editTime).get('year')) { // 超过36小时，显示月日
@@ -180,13 +215,14 @@ const useInitDataEffect = (noteDetail) => {
         if (noteDetail.value.note.collected) {
           collectedIcon.value = '&#xe64d;'
         }
-        setTimeout(() => {
-          load.value = false
-        }, 1000)
+        load.value = false
+        // setTimeout(() => {
+        //  load.value = false
+        // }, 1000)
       } else {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '错误',
           type: 'error',
           center: true,
           duration: 1000
@@ -388,50 +424,93 @@ const useCommentEffect = (noteDetail) => {
   }
 }
 
-const useInputEffect = (noteDetail, inputting, holder) => {
+const useInputEffect = (sendDrawer, refresh) => {
   const inputRef = ref(null)
   const handleInputComment = () => {
     console.log('唤起输入框')
-    inputting.value = true
-    console.log('正在输入', inputting.value)
+    sendDrawer.value = true
+    console.log('正在输入', sendDrawer.value)
     nextTick(() => {
       inputRef.value.focus() // 输入框显示后，获取焦点
     })
     console.log('输入框Ref', inputRef.value)
   }
 
+  const route = useRoute()
+  const entityType = ref(1) // 实体类型（1笔记，2评论）
+  const entityId = ref(route.params.noteId) // 实体id
+  const targetId = ref(0) // 目标用户id
+  const inputValue = ref('') // 输入的内容
+  // const targetNickname = ref(null) // 目标用户昵称
+  // 修改发送评论时需要传送的数据（comment组件用）
+  const updateData = (entityType1, entityId1, targetId1) => {
+    entityType.value = entityType1
+    entityId.value = entityId1
+    targetId.value = targetId1
+    // targetNickname.value = targetNickname1
+  }
   // 发送评论
-  const inputValue = ref('')
   const handleSendClick = async () => {
     try {
       const formData = new FormData()
-      formData.append('entityType', 1)
-      formData.append('entityId', noteDetail.value.note.id)
-      formData.append('targetId', 0)
+      formData.append('entityType', entityType.value)
+      formData.append('entityId', entityId.value)
+      formData.append('targetId', targetId.value)
       formData.append('content', inputValue.value)
       const result = await post('/note/sendComment', formData)
       if (result.code === 200) {
-        // 获取到发送的评论，以及我的信息
-        const myComment = {
-          user: {
-            id: holder.id,
-            nickname: holder.nickname,
-            avatar: holder.avatar
-          },
-          commentText: inputValue.value,
-          liked: false,
-          likeCount: 0,
-          commentTime: '1秒前'
+        refresh()
+        /*
+        // 对笔记进行评论
+        if (entityType.value === 1) {
+          // 获取到发送的评论，以及我的信息
+          const myComment = {
+            id: result.data, // 返回的评论id
+            user: {
+              id: holder.id,
+              nickname: holder.nickname,
+              avatar: holder.avatar
+            },
+            commentText: inputValue.value,
+            liked: false,
+            likeCount: 0,
+            commentTime: '刚刚'
+          }
+          noteDetail.value.comments.unshift(myComment) // 新增一条评论
+        } else { // 对评论进行回复
+          // 获取到发送的评论，以及我的信息
+          const myReply = {
+            id: result.data, // 返回的回复id
+            user: {
+              id: holder.id,
+              nickname: holder.nickname,
+              avatar: holder.avatar
+            },
+            target: {
+              nickname: targetNickname.value
+            },
+            replyText: inputValue.value,
+            liked: false,
+            likeCount: 0,
+            replyTime: '刚刚'
+          }
+          noteDetail.value.comments = noteDetail.value.comments.map(comment => {
+            if (comment.id === entityId.value) {
+              comment.reply.unshift(myReply) // 新增一条回复
+            }
+            return comment
+          })
+          console.log(noteDetail.value.comments)
         }
-        noteDetail.value.comments.unshift(myComment) // 新增一条评论
         noteDetail.value.commentCount++ // 评论总数增1
-        console.log('更新后的笔记详情', noteDetail.value)
         inputValue.value = '' // 清空输入框内容
         inputting.value = false // 发送完评论后收起输入框
+        updateData(1, noteDetail.value.note.id, 0, null) // 重置数据
+        */
       } else {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '错误',
           type: 'error',
           center: true,
           duration: 1000
@@ -450,6 +529,7 @@ const useInputEffect = (noteDetail, inputting, holder) => {
   return {
     inputRef,
     inputValue,
+    updateData,
     handleInputComment,
     handleSendClick
   }
@@ -482,23 +562,29 @@ export default {
 
     onMounted(() => {
       getNoteDetail()
-      getHolderInfo()
+      getHolderId()
     })
 
+    /*
     const holder = reactive({
       id: '', // 用户id
       avatar: '', // 用户头像
       nickname: '' // 用户昵称
     })
+    */
+    const holderId = ref('') // 持有者id
 
-    const getHolderInfo = async () => {
+    const getHolderId = async () => {
       try {
-        const result = await get('/user/getHolderInfo')
+        const result = await get('/user/getHolderUserId')
         if (result.code === 200 && result.data) {
+          holderId.value = result.data
+          /*
           holder.id = result.data.id
           holder.avatar = result.data.avatar
           holder.nickname = result.data.nickname
-          console.log(holder)
+          console.log('持有者', holder)
+          */
         } else {
           ElMessage({
             showClose: true,
@@ -525,26 +611,73 @@ export default {
       router.push(`/user/${userId}`)
     }
 
-    const inputting = ref(false)
-    const { inputRef, inputValue, handleInputComment, handleSendClick } = useInputEffect(noteDetail, inputting, holder)
-    // 点击输入框外区域，收起输入框（逻辑有问题）
-    const inputWrapperRef = ref(null)
-    const { isOutside } = useClickOutside(inputWrapperRef)
-    watch(isOutside, () => {
-      console.log('点击外面了', isOutside.value)
-      // 点击外部区域，且输入框出现，则收起输入框
-      if (isOutside.value && inputting.value) {
-        inputting.value = false
+    const sendDrawer = ref(false) // 控制发送评论el-drawer的显示
+    const refresh = inject('reload')
+    const { inputRef, inputValue, updateData, handleInputComment, handleSendClick } = useInputEffect(sendDrawer, refresh)
+
+    const drawer = ref(false) // 控制el-drawer组件的显示
+    const handleMoreClick = () => {
+      drawer.value = true
+    }
+
+    const handleEditClick = () => {
+      console.log('编辑')
+    }
+
+    const deleteDialogVisible = ref(false) // 控制删除对话框的显示
+
+    // 点击el-drawer中的删除按钮
+    const handleDeleteClick = () => {
+      drawer.value = false // 关闭el-drawer抽屉
+      deleteDialogVisible.value = true // 显示删除对话框
+    }
+
+    // 点击el-drawer中的取消按钮
+    const handleCancelClick = () => {
+      drawer.value = false // 关闭el-drawer抽屉
+    }
+
+    // 点击删除对话框中的取消按钮
+    const handleCancel = () => {
+      deleteDialogVisible.value = false // 关闭删除对话框
+    }
+
+    // 点击删除对话框中的删除按钮（确认删除）
+    const handleDelete = async () => {
+      try {
+        const formData = new FormData()
+        formData.append('noteId', noteDetail.value.note.id)
+        const result = await post('/note/deleteNote', formData)
+        if (result.code === 200) {
+          router.push('/my') // 删除成功跳转到个人中心页
+        } else {
+          deleteDialogVisible.value = false // 关闭删除对话框
+          ElMessage({
+            showClose: true,
+            message: '错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        deleteDialogVisible.value = false // 关闭删除对话框
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
       }
-    })
+    }
 
     return {
       load,
-      inputting,
       handleBackClick,
       mySwiper,
       modules: [Navigation, Pagination, Scrollbar, A11y],
-      holder,
+      holderId,
       buttonType,
       followButtonText,
       likedIcon,
@@ -556,11 +689,21 @@ export default {
       noteDetail,
       handleAvatarClick,
       changeCommentLiked,
-      inputWrapperRef,
+      sendDrawer,
       inputRef,
       handleInputComment,
       inputValue,
-      handleSendClick
+      updateData,
+      handleSendClick,
+      drawer,
+      handleMoreClick,
+      handleEditClick,
+      deleteDialogVisible,
+      handleDeleteClick,
+      handleCancelClick,
+      handleCancel,
+      handleDelete,
+      refresh
     }
   }
 }
@@ -749,6 +892,9 @@ export default {
       }
     }
   }
+  :deep(.el-overlay){
+    background-color: transparent !important;
+  }
   .input__wrapper{
     position: fixed;
     left: 0;
@@ -756,7 +902,7 @@ export default {
     bottom: 0;
     height: .5rem;
     padding: 0 .12rem;
-    z-index: 2;
+    //z-index: 2;
     background: $bgColor;
     border-top: .01rem solid $content-bgColor;
     display: flex;
@@ -801,5 +947,42 @@ export default {
     color: var(--el-button-text-color);
     border-color: var(--el-button-border-color);
     background-color: var(--el-button-bg-color);
+  }
+
+  .operation__drawer{
+    margin: -20px;
+    height: 1.2rem;
+  }
+  .drawer__item{
+    width: 100%;
+    height: .4rem;
+    line-height: .4rem;
+    font-size: .15rem;
+  }
+
+  :deep(.delete__dialog){
+    border-radius: .05rem;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .dialog__title{
+      font-size: .16rem;
+    }
+    .dialog-footer{
+      display: flex;
+      font-size: .16rem;
+      .cancel{
+        flex: 1;
+        text-align: center;
+        color: $textColor;
+      }
+      .delete{
+        flex: 1;
+        text-align: center;
+        color: $themeColor;
+      }
+    }
   }
 </style>
