@@ -10,12 +10,13 @@
     <div class="avatar__wrapper">
       <el-upload
         class="avatar-uploader"
-        action="https://jsonplaceholder.typicode.com/posts/"
+        action="https://upload-z2.qiniup.com"
+        :data="uploadToken"
         :show-file-list="false"
         :on-success="handleAvatarSuccess"
         :before-upload="beforeAvatarUpload"
       >
-        <img v-if="imageUrl" :src="imageUrl" class="avatar" fit="cover"/>
+        <img v-if="user.avatar" :src="user.avatar" class="avatar" fit="cover"/>
         <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
       </el-upload>
       <div class="id">{{`食趣ID: ${user.id}`}}</div>
@@ -83,7 +84,35 @@ export default {
         const result = await get('/user/getHolderInfo')
         if (result.code === 200 && result.data) {
           user.value = result.data
-          imageUrl.value = user.value.avatar
+        } else {
+          ElMessage({
+            showClose: true,
+            message: '发生错误',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
+    const uploadToken = reactive({
+      token: null
+    })
+    // 获取上传图片的token
+    const getUploadToken = async () => {
+      try {
+        const result = await get('/image/getToken')
+        if (result.code === 200) {
+          uploadToken.token = result.data
         } else {
           ElMessage({
             showClose: true,
@@ -107,13 +136,12 @@ export default {
     onMounted(() => {
       // 获取持有者信息
       getHolderInfo()
+      getUploadToken()
     })
 
-    const imageUrl = ref('')
-
     // 上传头像成功的操作
-    const handleAvatarSuccess = (response, uploadFile) => {
-      imageUrl.value = URL.createObjectURL()
+    const handleAvatarSuccess = (res) => {
+      user.value.avatar = 'http://shiqu.hyxk.xyz/' + res.key
     }
     // 上传之前的操作
     const beforeAvatarUpload = (rawFile) => {
@@ -200,7 +228,7 @@ export default {
     return {
       handleBackClick,
       user,
-      imageUrl,
+      uploadToken,
       handleAvatarSuccess,
       beforeAvatarUpload,
       rules,

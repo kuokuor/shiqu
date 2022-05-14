@@ -156,6 +156,7 @@ export default {
     const uploadToken = reactive({
       token: null
     })
+    // 获取上传图片的token
     const getUploadToken = async () => {
       try {
         const result = await get('/image/getToken')
@@ -219,10 +220,8 @@ export default {
     }
 
     const handleSuccess = (res) => {
-      console.log(noteData.photoList)
       noteData.photoList.pop()
       noteData.photoList.push({ url: 'http://shiqu.hyxk.xyz/' + res.key })
-      console.log(noteData.photoList)
     }
 
     const backDialogVisible = ref(false) // 点击返回图标后是否显示dialog

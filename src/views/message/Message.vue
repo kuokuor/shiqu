@@ -25,6 +25,7 @@
         </div>
       </div>
     </div>
+    <div style="width: 100%; height: 8px; background-color: #dbdbdb69;"></div>
     <div class="letter__bar">聊天列表</div>
     <div class="letter">
       <el-empty description="网络一线牵，主动才有缘~" v-if="!letterList || !letterList.length" />
@@ -258,9 +259,11 @@ export default {
       width: 100%;
       height: .25rem;
       line-height: .25rem;
-      padding-left: .05rem;
+      padding-left: .15rem;
+      text-align: left;
       font-size: .13rem;
       font-weight: bolder;
+      border-top: 1px solid #f1f1f1;
       border-bottom: 1px solid #f1f1f1;
     }
     .letter{

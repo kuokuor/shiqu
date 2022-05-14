@@ -581,8 +581,8 @@ export default {
       const scrollTop = underRef.value.scrollTop
       const scrollHeight = underRef.value.scrollHeight
       const clientHeight = underRef.value.clientHeight
-      // 判断是否滑到底部
-      if (scrollTop + clientHeight >= scrollHeight - 1) {
+      // 判断是否滑到底部（还要判断当前笔记列表中有无内容，有内容才能加载更多）
+      if (scrollTop + clientHeight >= scrollHeight - 1 && noteList.value[activeTab.value].length) {
         if (!noMore.value[activeTab.value]) { // 未加载完
           loadMore.value[activeTab.value] = true
           console.log('还有笔记，loadMore', loadMore.value)
@@ -721,14 +721,14 @@ export default {
     height: .4rem;
     line-height: .4rem;
   }
-  //.demo-tabs > .el-tabs__content {
-  //  padding: .32rem;
-  //  color: #6b778c;
-  //  font-size: .32rem;
-  //  font-weight: 600;
-  //}
-  .el-tabs__header {
-    margin: 0 0 5px 0;
+  :deep(.el-tabs__header){
+    position: fixed;
+    top: 35%;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    margin: 0 0 5px;
+    background: #fff;
   }
   :deep(.el-tabs__nav){
     float: none;
@@ -744,6 +744,9 @@ export default {
   }
   :deep(.el-tabs__active-bar){
     background-color: $themeColor;
+  }
+  :deep(.el-tabs__content){
+    top: .42rem;
   }
   .title{
     line-height: .3rem;
