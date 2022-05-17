@@ -631,6 +631,7 @@ export default {
 
     const handleEditClick = () => {
       console.log('编辑')
+      router.push({ name: 'UpdateNote', params: { noteId: noteDetail.value.note.id } })
     }
 
     const deleteDialogVisible = ref(false) // 控制删除对话框的显示

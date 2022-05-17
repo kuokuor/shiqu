@@ -105,6 +105,14 @@ const routes = [
       keepAlive: false // 不需要缓存
     }
   },
+  { // 修改笔记
+    path: '/updateNote/:noteId',
+    name: 'UpdateNote',
+    component: () => import(/* webpackChunkName: "updateNote" */ '../views/noteDetail/UpdateNote.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
   { // 我的
     path: '/my',
     name: 'My',
