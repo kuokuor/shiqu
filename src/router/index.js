@@ -76,9 +76,6 @@ const routes = [
   { // 注册登录
     path: '/registerAndLogin',
     name: 'RegisterAndLogin',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "registerAndLogin" */ '../views/registerAndLogin/RegisterAndLogin.vue'),
     meta: {
       keepAlive: false // 不需要缓存
@@ -116,6 +113,14 @@ const routes = [
       keepAlive: false // 不需要缓存
     }
   },
+  { // 修改密码
+    path: '/updatePassword',
+    name: 'UpdatePassword',
+    component: () => import(/* webpackChunkName: "updatePassword" */ '../views/my/UpdatePassword.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
   { // 用户资料
     path: '/user/:userId',
     name: 'UserInfo',
@@ -133,9 +138,9 @@ const routes = [
     }
   },
   { // 后台管理系统
-    path: '/managementHome',
-    name: 'ManagementHome',
-    component: () => import(/* webpackChunkName: "managementHome" */ '../views/management/ManagementHome.vue'),
+    path: '/management',
+    name: 'Management',
+    component: () => import(/* webpackChunkName: "management" */ '../views/management/Management.vue'),
     meta: {
       keepAlive: false // 不需要缓存
     }

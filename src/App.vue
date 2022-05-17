@@ -4,7 +4,8 @@
       <component :is="Component" />
     </keep-alive>
   </router-view>
-  <router-view v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
+  <!-- :key="$route.fullPath" 路由参数变化也会刷新 -->
+  <router-view :key="$route.fullPath" v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
 </template>
 
 <script>

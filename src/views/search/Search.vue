@@ -14,7 +14,7 @@
       >
         <template #prepend>
           <el-select v-model="type">
-            <el-option label="全部" value="全部"/>
+            <el-option label="全部笔记" value="全部笔记"/>
             <el-option label="美食笔记" value="美食笔记" />
             <el-option label="探店笔记" value="探店笔记" />
             <el-option label="用户" value="用户"/>
@@ -106,7 +106,7 @@ export default {
   },
   setup () {
     const searchText = ref('') // 搜索内容
-    const type = ref('全部') // 笔记类型
+    const type = ref('全部笔记') // 笔记类型
 
     const { handleBackClick } = useBackRouterEffect()
 
@@ -133,7 +133,7 @@ export default {
       try {
         const formData = new FormData()
         formData.append('keyword', searchText.value)
-        if (type.value === '全部') {
+        if (type.value === '全部笔记') {
           formData.append('type', 0)
         } else if (type.value === '美食笔记') {
           formData.append('type', 1)
@@ -312,7 +312,7 @@ export default {
         if (!noMore.value) { // 未加载完
           loadMore.value = true
           console.log('还有笔记，loadMore', loadMore.value)
-          throttle(() => getNoteList(false), 2000) // 加载更多笔记
+          throttle(() => getNoteList(false), 3000) // 加载更多笔记
         } else { // 全部加载完了
           loadMore.value = false
           console.log('加载完了，loadMore', loadMore.value)
@@ -532,5 +532,17 @@ export default {
         background-color: var(--el-button-bg-color);
       }
     }
+  }
+  .unknown__icon {
+    font-size: .22rem;
+    color: #666;
+  }
+  .male__icon {
+    font-size: .2rem;
+    color: #25a0e8;
+  }
+  .female__icon {
+    font-size: .2rem;
+    color: #e93170;
   }
 </style>

@@ -50,6 +50,7 @@ import { handleCountShow } from '../../effects/useHandleCountEffect'
 const useTabEffect = (load, activeIndex, noteList) => {
   // 模块切换逻辑
   const handleTabClick = (index) => {
+    // 选中模块下的笔记列表为空，或已经在选中的模块下（再次点击这个模块）
     if (!noteList.value[index].length || activeIndex.value === index) {
       load.value = true
       getNoteList(index, true) // 已经在index对应模块下了，重新获取数据(刷新)
@@ -57,7 +58,7 @@ const useTabEffect = (load, activeIndex, noteList) => {
       const mainDiv = document.getElementsByClassName('main')[0]
       mainDiv.scrollTop = 0
     }
-    activeIndex.value = index
+    activeIndex.value = index // 更新选中
   }
 
   const startCount = ref([0, 0, 0])
@@ -181,7 +182,7 @@ export default {
         if (!noMore.value[activeIndex.value]) { // 未加载完
           loadMore.value[activeIndex.value] = true
           console.log('还有笔记，loadMore', loadMore.value)
-          throttle(() => getNoteList(activeIndex.value, false), 2000) // 加载更多笔记
+          throttle(() => getNoteList(activeIndex.value, false), 3000) // 加载更多笔记
         } else { // 全部加载完了
           loadMore.value[activeIndex.value] = false
           console.log('加载完了，loadMore', loadMore.value)

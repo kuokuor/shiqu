@@ -55,10 +55,10 @@ const useLikeEffect = (noteData, icon, emit) => {
           icon.value = '&#xe6a9;'
           emit('changeLiked', noteId, false, -1)
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000

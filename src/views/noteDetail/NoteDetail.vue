@@ -47,7 +47,7 @@
             :comment="item"
             :noteId="noteDetail.note.id"
             :holderId="holderId"
-            :refresh="refresh"
+            :authorId="noteDetail.author.id"
             @changeCommentLiked="changeCommentLiked"
             @handleInputComment="handleInputComment"
             @updateData="updateData"
@@ -266,10 +266,10 @@ const useFollowedEffect = (noteDetail, buttonType, followButtonText) => {
           followButtonText.value = '+ 关注'
           noteDetail.value.author.followed = false
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000
@@ -316,10 +316,10 @@ const useLikedEffect = (noteDetail, likedIcon) => {
             --noteDetail.value.note.likeCount
           }
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000
@@ -362,10 +362,10 @@ const useCollectedEffect = (noteDetail, collectedIcon) => {
             --noteDetail.value.note.collectCount
           }
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000
@@ -447,6 +447,7 @@ const useInputEffect = (sendDrawer, refresh) => {
     entityType.value = entityType1
     entityId.value = entityId1
     targetId.value = targetId1
+    console.log('修改了数据', entityType.value, entityId.value, targetId.value)
     // targetNickname.value = targetNickname1
   }
   // 发送评论
@@ -507,6 +508,14 @@ const useInputEffect = (sendDrawer, refresh) => {
         inputting.value = false // 发送完评论后收起输入框
         updateData(1, noteDetail.value.note.id, 0, null) // 重置数据
         */
+      } else if (result.code === 401) {
+        ElMessage({
+          showClose: true,
+          message: '暂未登录，请登录!',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
       } else {
         ElMessage({
           showClose: true,
@@ -577,7 +586,7 @@ export default {
     const getHolderId = async () => {
       try {
         const result = await get('/user/getHolderUserId')
-        if (result.code === 200 && result.data) {
+        if (result.code === 200) {
           holderId.value = result.data
           /*
           holder.id = result.data.id
@@ -702,8 +711,7 @@ export default {
       handleDeleteClick,
       handleCancelClick,
       handleCancel,
-      handleDelete,
-      refresh
+      handleDelete
     }
   }
 }

@@ -148,9 +148,7 @@ export default {
       content: '', // 正文内容
       type: '', // 笔记类型（0: 美食笔记；1: 探店笔记）（页面上显示类型名称，传给后端对应number）
       tagsName: {}, // 标签（此处存放对应标签名，为了草稿的展示。传给后端对应number）
-      photoList: [
-
-      ] // 准备上传的图片文件列表
+      photoList: [] // 准备上传的图片文件列表
     })
 
     const uploadToken = reactive({
@@ -162,14 +160,15 @@ export default {
         const result = await get('/image/getToken')
         if (result.code === 200) {
           uploadToken.token = result.data
-        } else {
+        } else if (result.code === 401) {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '暂未登录，请登录!',
             type: 'error',
             center: true,
             duration: 1000
           })
+          router.replace('/registerAndLogin')
         }
       } catch (e) {
         ElMessage({
@@ -354,13 +353,13 @@ export default {
             duration: 1000
           })
           router.push('/') // 跳转到首页
-        } else {
+        } else if (result.code === 500) {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '填写完整才可发布哦~',
             type: 'error',
             center: true,
-            duration: 1000
+            duration: 2000
           })
         }
       } catch (e) {

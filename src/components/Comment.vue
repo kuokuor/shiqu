@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { post } from '../utils/request'
@@ -129,10 +129,10 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
           icon.value = '&#xe6a9;'
           emit('changeCommentLiked', commentId, null, false, -1)
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000
@@ -169,10 +169,10 @@ const useLikeEffect = (icon, replyIcon, noteId, emit) => {
           replyIcon.value[index] = '&#xe6a9;'
           emit('changeCommentLiked', commentId, replyId, false, -1)
         }
-      } else {
+      } else if (result.code === 401) {
         ElMessage({
           showClose: true,
-          message: '发生错误',
+          message: '暂未登录，请登录!',
           type: 'error',
           center: true,
           duration: 1000
@@ -206,7 +206,7 @@ const useUserAvatarEffect = () => {
 
 export default {
   name: 'Comment',
-  props: ['comment', 'noteId', 'holderId', 'refresh'],
+  props: ['comment', 'noteId', 'holderId', 'authorId'],
   setup (props, context) {
     console.log(props.comment)
     const icon = props.comment.liked ? ref('&#xe6aa;') : ref('&#xe6a9;') // 评论的点赞图标
@@ -239,15 +239,15 @@ export default {
     }
     // 点击评论触发的事件
     const handleTextClick = (entityId1, targetId1, targetCommentId1) => {
-      console.log('进行回复', entityId)
-      if (targetId1 === props.holderId) { // 本人发的评论
+      console.log('进行回复', entityId1)
+      entityId.value = entityId1
+      targetId.value = targetId1
+      targetCommentId.value = targetCommentId1
+      if (props.authorId === props.holderId || targetId1 === props.holderId) { // 本人的笔记 或 本人发的评论
         drawer.value = true
       } else { // 非本人的评论
         handleReplyClick()
       }
-      entityId.value = entityId1
-      targetId.value = targetId1
-      targetCommentId.value = targetCommentId1
     }
 
     const deleteDialogVisible = ref(false) // 控制删除对话框的显示
@@ -267,6 +267,7 @@ export default {
       deleteDialogVisible.value = false // 关闭删除对话框
     }
 
+    const refresh = inject('reload') // 刷新
     // 点击删除对话框中的删除按钮（确认删除）
     const handleDelete = async () => {
       try {
@@ -274,7 +275,7 @@ export default {
         formData.append('commentId', targetCommentId.value)
         const result = await post('/note/deleteComment', formData)
         if (result.code === 200) {
-          props.refresh() // 刷新
+          refresh() // 刷新
         } else {
           deleteDialogVisible.value = false // 关闭删除对话框
           ElMessage({

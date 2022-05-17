@@ -93,10 +93,10 @@ export default {
             const clientHeight = msgBox.value.clientHeight // 聊天框可视高度
             msgBox.value.scrollTop = scrollHeight - clientHeight // 滚动到底部
           })
-        } else {
+        } else if (result.code === 401) {
           ElMessage({
             showClose: true,
-            message: '错误' + result.code,
+            message: '暂未登录，请登录!',
             type: 'error',
             center: true,
             duration: 1000
@@ -152,10 +152,10 @@ export default {
           sendMsg.value.blur() // 设置输入框失焦
           isInput.value = false
           console.log('发送了消息', chatList.value)
-        } else {
+        } else if (result.code === 401) {
           ElMessage({
             showClose: true,
-            message: '错误' + result.code,
+            message: '暂未登录，请登录!',
             type: 'error',
             center: true,
             duration: 1000

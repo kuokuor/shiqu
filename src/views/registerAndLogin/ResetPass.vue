@@ -35,7 +35,7 @@
           <el-form-item prop="checkPassword">
             <el-input
               type="password"
-              placeholder="确认密码"
+              placeholder="确认新密码"
               v-model="resetForm.checkPassword"
               autocomplete="off"
               class="input__item"
@@ -165,12 +165,12 @@ const useCodeEffect = (resetFormRef) => {
   const sendCode = (email) => {
     resetFormRef.value.validateField('email', async (valid) => {
       if (valid) {
-        textBtn() // 验证码倒数60秒
         try {
           const formData = new FormData()
           formData.append('email', email)
           const result = await post('/user/sendCodeForResetPass', formData)
           if (result.code === 200) {
+            textBtn() // 验证码倒数60秒
             ElMessage({
               showClose: true,
               message: '成功发送验证码，请注意查收!',
@@ -181,7 +181,7 @@ const useCodeEffect = (resetFormRef) => {
           } else {
             ElMessage({
               showClose: true,
-              message: '发生错误',
+              message: result.msg,
               type: 'error',
               center: true,
               duration: 2000

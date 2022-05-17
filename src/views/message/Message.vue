@@ -1,6 +1,15 @@
 <template>
   <div class="header">消息</div>
-  <div class="main">
+  <!-- 未登录 -->
+  <div class="main" v-if="isLogin === false">
+    <div class="login__tips">
+      <div class="text">登录之后才可查看消息哦</div>
+      <button class="login__btn" @click="handleLoginClick">登录</button>
+    </div>
+    <docker :currentIndex="3" />
+  </div>
+  <!-- 登录了 -->
+  <div class="main" v-if="isLogin === true">
     <div class="notice">
       <div class="notice__header">
         <div class="icon__wrapper">
@@ -52,7 +61,7 @@
         </div>
       </div>
     </div>
-    <span class="noMore">没有更多啦~</span>
+    <span class="noMore" v-if="letterList.length">没有更多啦~</span>
   </div>
   <docker :currentIndex="3"/>
 </template>
@@ -71,7 +80,12 @@ export default {
     Docker
   },
   setup () {
-    // const unreadTotal = ref(0) // 未读消息总数
+    const isLogin = ref(null) // 是否登录
+
+    // 进入登录页
+    const handleLoginClick = () => {
+      router.push('/registerAndLogin')
+    }
 
     const unreadLikeCount = ref(0) // 未读点赞通知数
     const unreadCollectCount = ref(0) // 未读收藏通知数
@@ -81,10 +95,16 @@ export default {
     const getUnreadNoticeCount = async () => {
       try {
         const result = await get('/message/getUnreadNoticeCount') // 各类未读通知数量
-        unreadLikeCount.value = result.data.like
-        unreadCollectCount.value = result.data.collect
-        unreadCommentCount.value = result.data.comment
-        unreadFollowCount.value = result.data.follow
+        if (result.code === 200) {
+          unreadLikeCount.value = result.data.like
+          unreadCollectCount.value = result.data.collect
+          unreadCommentCount.value = result.data.comment
+          unreadFollowCount.value = result.data.follow
+
+          isLogin.value = true // 已登录
+        } else if (result.code === 401) {
+          isLogin.value = false // 未登录
+        }
       } catch (e) {
         console.log('获取未读通知数量出错')
       }
@@ -131,14 +151,6 @@ export default {
             return item
           })
           letterList.value = [...list]
-        } else {
-          ElMessage({
-            showClose: true,
-            message: '发生错误',
-            type: 'error',
-            center: true,
-            duration: 1000
-          })
         }
       } catch (e) {
         ElMessage({
@@ -170,6 +182,8 @@ export default {
     }
 
     return {
+      isLogin,
+      handleLoginClick,
       unreadLikeCount,
       unreadCollectCount,
       unreadCommentCount,
@@ -202,18 +216,29 @@ export default {
     font-size: .16rem;
     border-bottom: 0.01rem solid $content-bgColor;
     background: $bgColor;
-    //.manage{
-    //  width: .5rem;
-    //  &__icon{
-    //    position: relative;
-    //    top: .08rem;
-    //    right: .04rem;
-    //    font-size: .24rem;
-    //    text-decoration: none;
-    //    color: $textColor;
-    //  }
-    //}
   }
+  .login__tips{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .text{
+    font-size: .14rem;
+    color: $darkgray;
+    letter-spacing:2px;
+  }
+  .login__btn{
+    margin-top: .1rem;
+    padding: .05rem .15rem;
+    height: .3rem;
+    border: none;
+    border-radius: .15rem;
+    color: $bgColor;
+    font-size: .14rem;
+    background-color: $themeColor;
+  }
+
   .main{
     width: 100%;
     height: calc(100vh - 1rem);

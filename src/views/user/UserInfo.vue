@@ -112,7 +112,7 @@
       <div class="title" v-else>我的关注</div>
       <div class="list__wrapper" v-for="item in followList" :key="item.user.id">
         <div class="avatar">
-          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
+          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" @click="handleAvatarClick(item.user.id)" />
         </div>
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
@@ -150,7 +150,7 @@
       <div class="title" v-else>我的粉丝</div>
       <div class="list__wrapper" v-for="item in fansList" :key="item.user.id">
         <div class="avatar">
-          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
+          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" @click="handleAvatarClick(item.user.id)" />
         </div>
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
@@ -202,17 +202,9 @@ const useHolderUserEffect = () => {
   const getHolderUserId = async () => {
     try {
       const result = await get('/user/getHolderUserId')
-      if (result.code === 200 && result.data) {
+      if (result.code === 200) {
         holderUserId.value = result.data
         console.log(holderUserId.value)
-      } else {
-        ElMessage({
-          showClose: true,
-          message: '发生错误',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
       }
     } catch (e) {
       ElMessage({
@@ -415,7 +407,17 @@ export default {
 
     // 私信
     const handleChatClick = () => {
-      router.push(`/chat/${route.params.userId}`)
+      if (holderUserId.value === null) {
+        ElMessage({
+          showClose: true,
+          message: '暂未登录，请登录!',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      } else {
+        router.push(`/chat/${route.params.userId}`)
+      }
     }
 
     // 编辑资料
@@ -450,10 +452,10 @@ export default {
               userData.hasFollowed = followed
             }
           }
-        } else {
+        } else if (result.code === 401) {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '暂未登录，请登录!',
             type: 'error',
             center: true,
             duration: 1000
@@ -534,6 +536,10 @@ export default {
       }
     }
 
+    const handleAvatarClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
     const noteList = ref([[], []])
 
     const loadMore = ref([false, false]) // 控制加载更多图标的显示
@@ -587,9 +593,9 @@ export default {
           loadMore.value[activeTab.value] = true
           console.log('还有笔记，loadMore', loadMore.value)
           if (activeTab.value === 0 || activeTab.value === '0') {
-            throttle(() => getNoteList(false), 2000)
+            throttle(() => getNoteList(false), 3000)
           } else {
-            throttle(() => getCollectedNoteList(false), 2000)
+            throttle(() => getCollectedNoteList(false), 3000)
           }
         } else { // 没有更多数据了
           loadMore.value[activeTab.value] = false
@@ -613,6 +619,7 @@ export default {
       followList,
       fansDrawer,
       fansList,
+      handleAvatarClick,
       noteList,
       activeTab,
       loadMore,

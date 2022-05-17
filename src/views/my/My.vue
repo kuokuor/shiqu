@@ -1,10 +1,18 @@
 <template>
-  <div class="box">
+  <!-- 未登录 -->
+  <div class="box" style="padding-top: .7rem;" v-if="holderId === null">
+    <div class="text">食趣</div>
+    <div class="text">唯有爱和美食不可辜负</div>
+    <button class="login__btn" @click="handleLoginClick">登录</button>
+    <docker :currentIndex="4" />
+  </div>
+  <!-- 登录了 -->
+  <div class="box" v-else-if="holderId !== ''">
     <div class="above">
       <div class="header">
         <el-row :gutter="20" class="header__wrapper">
           <el-col :span="3" :offset="21">
-            <i class="iconfont set__icon">&#xe65e;</i>
+            <i class="iconfont set__icon" @click="handleSetClick">&#xe65e;</i>
           </el-col>
         </el-row>
       </div>
@@ -98,7 +106,7 @@
       <div class="title">我的关注</div>
       <div class="list__wrapper" v-for="item in followList" :key="item.user.id">
         <div class="avatar">
-          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
+          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" @click="handleAvatarClick(item.user.id)" />
         </div>
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
@@ -134,7 +142,7 @@
       <div class="title">我的粉丝</div>
       <div class="list__wrapper" v-for="item in fansList" :key="item.user.id">
         <div class="avatar">
-          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" />
+          <el-avatar style="--el-avatar-size: .4rem;" :src="item.user.avatar" @click="handleAvatarClick(item.user.id)" />
         </div>
         <div class="nickname__wrapper">
           <span class="nickname">{{ item.user.nickname }}</span>
@@ -165,12 +173,36 @@
         </el-button>
       </div>
     </el-drawer>
+
+    <el-drawer v-model="setDrawer" direction="btt" :with-header="false" size="12.5%">
+      <div class="set__drawer">
+        <div class="drawer__item" @click="handleUpdatePassClick">修改密码</div>
+        <div class="drawer__item" @click="handleLogoutClick">退出登录</div>
+      </div>
+    </el-drawer>
+
+    <!-- 点击删除按钮后出现对话框 -->
+    <el-dialog
+      v-model="logoutDialogVisible"
+      title=""
+      width="70%"
+      custom-class="logout__dialog"
+      :show-close="false"
+    >
+      <span class="dialog__title">确定退出食趣?</span>
+      <template #footer>
+        <div class="dialog-footer">
+          <span class="cancel" @click="handleCancel">取消</span>
+          <span class="logout" @click="handleLogout">确定</span>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { get, post } from '../../utils/request'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { handleCountShow } from '../../effects/useHandleCountEffect'
@@ -184,17 +216,9 @@ const useHolderUserEffect = () => {
   const getHolderId = async () => {
     try {
       const result = await get('/user/getHolderUserId')
-      if (result.code === 200 && result.data) {
+      if (result.code === 200) {
         holderId.value = result.data
         console.log('获取到的', holderId.value)
-      } else {
-        ElMessage({
-          showClose: true,
-          message: '还没有登录哦',
-          type: 'error',
-          center: true,
-          duration: 1000
-        })
       }
     } catch (e) {
       ElMessage({
@@ -502,6 +526,10 @@ export default {
       }
     }
 
+    const handleAvatarClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
     const noteList = ref([[], []])
 
     const loadMore = ref([false, false]) // 控制加载更多图标的显示
@@ -511,11 +539,14 @@ export default {
 
     onMounted(async () => {
       await getHolderId() // 获取持有者id
-      getUserInfo() // 获取(持有者)用户信息
-      getNoteList(true) // 加载笔记
-      console.log('笔记', noteList.value)
-      console.log('underRef', underRef.value)
-      underRef.value.addEventListener('scroll', scrollToBottom)
+      // 获取到持有者id，表示已登录，显示个人中心页；否则跳转到登录页
+      if (holderId.value !== '' && holderId.value !== null) {
+        getUserInfo() // 获取(持有者)用户信息
+        getNoteList(true) // 加载笔记
+        console.log('笔记', noteList.value)
+        console.log('underRef', underRef.value)
+        underRef.value.addEventListener('scroll', scrollToBottom)
+      }
     })
 
     // 点赞与取消
@@ -557,15 +588,69 @@ export default {
           loadMore.value[activeTab.value] = true
           console.log('还有笔记，loadMore', loadMore.value)
           if (activeTab.value === 0 || activeTab.value === '0') {
-            throttle(() => getNoteList(false), 2000)
+            throttle(() => getNoteList(false), 3000)
           } else {
-            throttle(() => getCollectedNoteList(false), 2000)
+            throttle(() => getCollectedNoteList(false), 3000)
           }
         } else { // 没有更多数据了
           loadMore.value[activeTab.value] = false
           console.log('加载完了，loadMore', loadMore.value)
         }
       }
+    }
+
+    const setDrawer = ref(false)
+    // 点击设置图标后出现el-drawer
+    const handleSetClick = () => {
+      setDrawer.value = true
+    }
+
+    // 进入修改密码页
+    const handleUpdatePassClick = () => {
+      router.push('/updatePassword')
+    }
+
+    const logoutDialogVisible = ref(false)
+    // 点击退出登录后出现el-dialog，关闭el-drawer
+    const handleLogoutClick = () => {
+      logoutDialogVisible.value = true
+      setDrawer.value = false
+    }
+
+    // 点击取消后关闭el-dialog
+    const handleCancel = () => {
+      logoutDialogVisible.value = false
+    }
+
+    const refresh = inject('reload') // 刷新
+    const handleLogout = async () => {
+      try {
+        const result = await post('user/logout')
+        if (result.code === 200) {
+          refresh()
+        } else {
+          ElMessage({
+            showClose: true,
+            message: result.msg,
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
+    }
+
+    // 进入登录页
+    const handleLoginClick = () => {
+      router.push('/registerAndLogin')
     }
 
     return {
@@ -581,12 +666,21 @@ export default {
       followList,
       fansDrawer,
       fansList,
+      handleAvatarClick,
       noteList,
       activeTab,
       loadMore,
       noMore,
       underRef,
-      handleTabClick
+      handleTabClick,
+      setDrawer,
+      handleSetClick,
+      handleUpdatePassClick,
+      logoutDialogVisible,
+      handleLogoutClick,
+      handleCancel,
+      handleLogout,
+      handleLoginClick
     }
   }
 }
@@ -599,6 +693,24 @@ export default {
     width:100vw;
     height:100vh;
   }
+  .text{
+    margin-left: 8%;
+    font-size: .3rem;
+    font-weight: bolder;
+    text-align: left;
+    letter-spacing:2px;
+  }
+  .login__btn{
+    margin-top: 4rem;
+    width: 80%;
+    height: .5rem;
+    border: none;
+    border-radius: .25rem;
+    color: $bgColor;
+    font-size: .2rem;
+    background-color: $themeColor;
+  }
+
   .above {
     height: 35%;
     padding: .1rem;
@@ -754,6 +866,43 @@ export default {
         color: var(--el-button-text-color);
         border-color: var(--el-button-border-color);
         background-color: var(--el-button-bg-color);
+      }
+    }
+  }
+
+  .set__drawer{
+    margin: -20px;
+    height: 1rem;
+  }
+  .drawer__item{
+    width: 100%;
+    height: .5rem;
+    line-height: .5rem;
+    font-size: .15rem;
+  }
+
+  :deep(.logout__dialog){
+    border-radius: .05rem;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .dialog__title{
+      font-size: .16rem;
+    }
+    .dialog-footer{
+      display: flex;
+      font-size: .16rem;
+      .cancel{
+        flex: 1;
+        text-align: center;
+        color: $textColor;
+      }
+      .logout{
+        flex: 1;
+        text-align: center;
+        color: $themeColor;
       }
     }
   }

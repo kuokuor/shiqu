@@ -237,12 +237,12 @@ const useCodeEffect = (registerFormRef) => {
   const sendCode = (email) => {
     registerFormRef.value.validateField('email', async (valid) => {
       if (valid) {
-        textBtn() // 验证码倒数60秒
         try {
           const formData = new FormData()
           formData.append('email', email)
           const result = await post('/user/sendCodeForRegister', formData)
           if (result.code === 200) {
+            textBtn() // 验证码倒数60秒
             ElMessage({
               showClose: true,
               message: '成功发送验证码，请注意查收!',
@@ -253,7 +253,7 @@ const useCodeEffect = (registerFormRef) => {
           } else {
             ElMessage({
               showClose: true,
-              message: '发生错误',
+              message: result.msg,
               type: 'error',
               center: true,
               duration: 2000
