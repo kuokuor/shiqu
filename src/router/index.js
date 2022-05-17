@@ -137,6 +137,14 @@ const routes = [
       keepAlive: false // 不需要缓存
     }
   },
+  { // 后台管理系统登录界面
+    path: '/managementLogin',
+    name: 'ManagementLogin',
+    component: () => import(/* webpackChunkName: "managementLogin" */ '../views/management/ManagementLogin.vue'),
+    meta: {
+      keepAlive: false // 不需要缓存
+    }
+  },
   { // 后台管理系统
     path: '/management',
     name: 'Management',

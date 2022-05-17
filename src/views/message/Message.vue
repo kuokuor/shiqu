@@ -327,7 +327,8 @@ export default {
               @include ellipsis;
             }
             .letter__unreadCount{
-              margin-right: .15rem;
+              margin-right: 0.15rem;
+              max-width: 0.2rem;
               .el-badge{
                 --el-badge-radius: .10rem;
                 --el-badge-font-size: .12rem;
@@ -335,7 +336,9 @@ export default {
                 --el-badge-size: .18rem;
               }
               :deep(sup){
+                position: relative;
                 top: 0;
+                left: 0;
               }
             }
           }
