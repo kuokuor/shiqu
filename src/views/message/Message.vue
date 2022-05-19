@@ -47,6 +47,7 @@
             <!-- 增加一个div用来做自适应宽度超出部分省略 -->
             <div style="flex: 1; overflow: hidden; text-align: left;">
               <span class="letter__nickname">{{ item.from.nickname }}</span>
+              <span class="iconfont official__icon" v-if="item.from.type === 999">&#xe608;</span>
             </div>
             <span class="letter__time">{{item.letter.lastTime}}</span>
           </div>
@@ -311,8 +312,15 @@ export default {
               font-size: .14rem;
               color: $textColor;
               display: inline-block;
-              max-width: 100%;
+              max-width: 86%;
               @include ellipsis;
+            }
+            .official__icon{
+              position: relative;
+              top: -0.05rem;
+              left: 0.05rem;
+              font-size: .18rem;
+              color: #ffb400;
             }
             .letter__time{
               max-width: 20%;

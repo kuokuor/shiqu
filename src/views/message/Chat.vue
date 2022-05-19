@@ -2,7 +2,7 @@
   <div class="chat__box">
     <div class="header">
       <a class="iconfont back__icon" @click.prevent="handleBackClick">&#xe600;</a>
-      <span>{{targetNickname}}</span>
+      <span style="color: #fff;">{{targetNickname}}</span>
     </div>
     <div class="msg__box" ref="msgBox">
       <div
@@ -12,11 +12,11 @@
       >
         <div class="msg" v-if="item.fromId === myUserId" style="float: right;"> <!-- 我发的消息 -->
           <div class="user__wrapper" style="justify-content: end;">
-            <div class="user__msg">
+            <div class="user__msg" style="color: #fff; background: #75a297;">
               <span>{{item.content}}</span>
             </div>
             <div class="user__header">
-              <el-avatar style="--el-avatar-size: .3rem" :src="myAvatar" />
+              <el-avatar style="--el-avatar-size: .3rem" :src="myAvatar" @click="handleAvatarClick(item.fromId)" />
             </div>
           </div>
           <div class="create__time" style="position: relative; right: .5rem; text-align: right;">{{item.createTime}}</div>
@@ -24,7 +24,7 @@
         <div class="msg" v-else> <!-- 对方发的 -->
           <div class="user__wrapper">
             <div class="user__header">
-              <el-avatar style="--el-avatar-size: .3rem" :src="targetAvatar" />
+              <el-avatar style="--el-avatar-size: .3rem" :src="targetAvatar" @click="handleAvatarClick(item.fromId)" />
             </div>
             <div class="user__msg">
               <span>{{item.content}}</span>
@@ -45,7 +45,7 @@
 
 <script>
 import { nextTick, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { post } from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { useBackRouterEffect } from '../../effects/useBackRouterEffect'
@@ -174,6 +174,12 @@ export default {
 
     const msgBox = ref(null) // 聊天记录展示框
 
+    const router = useRouter()
+    // 点击头像进入用户资料页
+    const handleAvatarClick = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+
     onMounted(() => {
       getChatList()
     })
@@ -190,7 +196,8 @@ export default {
       sendText,
       msgBox,
       isInput,
-      inputText
+      inputText,
+      handleAvatarClick
     }
   }
 

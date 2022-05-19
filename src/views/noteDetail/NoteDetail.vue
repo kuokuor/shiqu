@@ -1,6 +1,6 @@
 <template>
   <loading v-if="load" />
-  <div class="wrapper">
+  <div class="box">
     <div class="header">
       <div class="back">
         <a class="iconfont back__icon" @click="handleBackClick">&#xe600;</a>
@@ -10,7 +10,10 @@
           <el-avatar style="--el-avatar-size: .4rem" :src="noteDetail.author?.avatar" @click="handleAvatarClick(noteDetail.author?.id)" />
         </div>
         <div class="wrapper">
-          <span class="nickname">{{noteDetail.author?.nickname}}</span>
+          <span class="nickname__wrapper">
+            <span class="nickname">{{noteDetail.author?.nickname}}</span>
+            <span class="iconfont official__icon" v-if="noteDetail.author?.type === 999">&#xe608;</span>
+          </span>
           <span class="editTime">{{noteDetail.note?.editTime}}</span>
         </div>
         <el-button v-show="noteDetail.author?.id != holderId" :type="buttonType" round @click="handleFollowClick(noteDetail.author.followed)">{{followButtonText}}</el-button>
@@ -720,6 +723,7 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../style/viriables.scss';
+@import '../../style/mixins.scss';
   .header{
     display: flex;
     width: 100%;
@@ -742,18 +746,36 @@ export default {
       line-height: .5rem;
       display: flex;
       align-items: center;
+      overflow: hidden;
       .avatar{
         width: .4rem;
         margin: 0 .08rem;
       }
       .wrapper{
         height: 100%;
+        flex: 1;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        .nickname{
-          line-height: .3rem;
-          font-size: .17rem;
+        .nickname__wrapper{
+          width: 100%;
+          height: 0.3rem;
+          text-align: left;
+          .nickname{
+            display: inline-block;
+            max-width: 82%;
+            line-height: .3rem;
+            font-size: .17rem;
+            @include ellipsis;
+          }
+          .official__icon{
+            position: relative;
+            top: -0.1rem;
+            left: 0.05rem;
+            font-size: .18rem;
+            color: #ffb400;
+          }
         }
         .editTime{
           line-height: .15rem;

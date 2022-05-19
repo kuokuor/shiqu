@@ -29,12 +29,13 @@
           </el-col>
         </el-row>
         <el-row style="margin: .08rem 0; text-align: left;">
-          <el-col :span="16">
-            <span class="button__text" style="font-size: .2rem; padding: 0 .1rem;">{{ userInfo.user?.nickname }}</span>
+          <el-col :span="16" style="overflow: hidden; height: 0.3rem;">
+            <span class="button__text" style="display: inline-block; max-width: 77%; width: auto; font-size: .2rem; padding: 0 .1rem;">{{ userInfo.user?.nickname }}</span>
             <!-- 0-未知 1-男 2-女 -->
-            <span class="iconfont unknown__icon" v-if="userInfo.user?.sex === 0">&#xfb29;</span>
-            <span class="iconfont male__icon" v-else-if="userInfo.user?.sex === 1">&#xe643;</span>
-            <span class="iconfont female__icon" v-else >&#xe647;</span>
+            <span class="iconfont unknown__icon" style="top: -0.07rem;" v-if="userInfo.user?.sex === 0">&#xfb29;</span>
+            <span class="iconfont male__icon" style="top: -0.07rem;" v-else-if="userInfo.user?.sex === 1">&#xe643;</span>
+            <span class="iconfont female__icon" style="top: -0.07rem;" v-else >&#xe647;</span>
+            <span class="iconfont official__icon" style="top: -0.07rem; left: 0.07rem;" v-if="userInfo.user?.type === 999">&#xe608;</span>
           </el-col>
         </el-row>
         <div class="description">
@@ -114,6 +115,7 @@
           <span class="iconfont unknown__icon" style="font-size: .2rem" v-if="item.user.sex === 0">&#xfb29;</span>
           <span class="iconfont male__icon" style="font-size: .15rem" v-else-if="item.user.sex === 1">&#xe643;</span>
           <span class="iconfont female__icon" style="font-size: .15rem" v-else >&#xe647;</span>
+          <span class="iconfont official__icon" style="left: .05rem; font-size: .18rem;" v-if="item.user.type === 999">&#xe608;</span>
         </div>
         <!-- 性别图标 [考虑添加] -->
         <!-- 当前持有者是否关注用户 -->
@@ -150,6 +152,7 @@
           <span class="iconfont unknown__icon" style="font-size: .2rem" v-if="item.user.sex === 0">&#xfb29;</span>
           <span class="iconfont male__icon" style="font-size: .15rem" v-else-if="item.user.sex === 1">&#xe643;</span>
           <span class="iconfont female__icon" style="font-size: .15rem" v-else >&#xe647;</span>
+          <span class="iconfont official__icon" style="left: .05rem; font-size: .18rem;" v-if="item.user.type === 999">&#xe608;</span>
         </div>
         <!-- 当前持有者是否关注用户 -->
         <el-button
@@ -745,16 +748,24 @@ export default {
     right: -.08rem;
   }
   .unknown__icon {
+    position: relative;
     font-size: .22rem;
     color: #666;
   }
   .male__icon {
+    position: relative;
     font-size: .2rem;
     color: #25a0e8;
   }
   .female__icon {
+    position: relative;
     font-size: .2rem;
     color: #e93170;
+  }
+  .official__icon{
+    position: relative;
+    font-size: .2rem;
+    color: #ffb400;
   }
   .button {
     margin-top: .2rem;
@@ -850,7 +861,7 @@ export default {
         bottom: -0.04rem;
         display: inline-block;
         margin-right: .05rem;
-        max-width: 80%;
+        max-width: 65%;
         @include ellipsis;
       }
     }
