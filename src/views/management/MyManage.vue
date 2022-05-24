@@ -13,7 +13,7 @@
           <el-input v-model="adminForm.nickname" />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="adminForm.email" />
+          <el-input v-model="adminForm.email" disabled />
         </el-form-item>
         <el-form-item label="性别" prop="sex">
           <el-radio-group v-model="adminForm.sex">
@@ -45,17 +45,35 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { post } from '../../utils/request'
+import { ElMessage } from 'element-plus'
+
 export default {
   name: 'MyManage',
-  setup () {
+  props: ['admin'],
+  setup (props) {
     const adminFormRef = ref(null)
     const adminForm = reactive({
       id: '',
-      nickname: 'Hello',
-      email: '23456',
-      sex: '男',
-      description: '1123'
+      email: '',
+      nickname: '',
+      sex: '',
+      description: ''
+    })
+
+    onMounted(() => {
+      adminForm.id = props.admin.id
+      adminForm.email = props.admin.email
+      adminForm.nickname = props.admin.nickname
+      if (props.admin.sex === 0) {
+        adminForm.sex = '未知'
+      } else if (props.admin.sex === 1) {
+        adminForm.sex = '男'
+      } else {
+        adminForm.sex = '女'
+      }
+      adminForm.description = props.admin.description
     })
 
     // 邮箱格式
@@ -98,7 +116,47 @@ export default {
       if (!formEl) return
       formEl.validate(async (valid) => {
         if (valid) {
-          console.log('验证成功，进行请求')
+          try {
+            let sex = 0
+            if (adminForm.sex === '未知') {
+              sex = 0
+            } else if (adminForm.sex === '男') {
+              sex = 1
+            } else {
+              sex = 2
+            }
+
+            const formData = new FormData()
+            formData.append('nickname', adminForm.nickname)
+            formData.append('sex', sex)
+            formData.append('description', adminForm.description)
+            const result = await post('/user/updateUserInfo', formData)
+            if (result.code === 200) {
+              ElMessage({
+                showClose: true,
+                message: '修改成功！',
+                type: 'success',
+                center: true,
+                duration: 1000
+              })
+            } else {
+              ElMessage({
+                showClose: true,
+                message: '发生错误',
+                type: 'error',
+                center: true,
+                duration: 1000
+              })
+            }
+          } catch (e) {
+            ElMessage({
+              showClose: true,
+              message: '发生错误',
+              type: 'error',
+              center: true,
+              duration: 1000
+            })
+          }
         }
       })
     }

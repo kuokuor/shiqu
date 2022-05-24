@@ -2,7 +2,7 @@
   <div class="box">
     <div class="menu__wrapper">
       <div class="menu__title">
-        <el-avatar :size="40" src="../../assets/shiqu__logo.jpg" />
+        <el-avatar :size="40" src="http://shiqu.hyxk.xyz/shiqu__logo.jpg" />
         <span class="title">食趣后台管理系统</span>
       </div>
       <el-menu
@@ -53,7 +53,7 @@
             <home-manage v-if="editableTabsValue === '1'" />
             <user-manage v-if="editableTabsValue === '2'" />
             <note-manage v-if="editableTabsValue === '3'" />
-            <my-manage v-if="editableTabsValue === '4'" />
+            <my-manage :admin="admin" v-if="editableTabsValue === '4'" />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -68,7 +68,9 @@ import HomeManage from './HomeManage.vue'
 import UserManage from './UserManage.vue'
 import NoteManage from './NoteManage.vue'
 import MyManage from './MyManage.vue'
+import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { post, get } from '../../utils/request'
 
 export default {
   name: 'Management',
@@ -85,12 +87,53 @@ export default {
   setup () {
     // 管理员信息
     const admin = reactive({
-      nickname: 'admin',
-      avatar: '../../assets/user-bgImg.jpg'
+      id: '',
+      nickname: '',
+      avatar: '',
+      email: '',
+      sex: '',
+      description: ''
     })
 
-    const getAdminInfo = () => {
-      console.log('获取管理员信息')
+    const getAdminInfo = async () => {
+      try {
+        const result = await get('/user/getHolderInfo')
+        if (result.code === 200 && result.data) {
+          if (result.data.type !== 999) {
+            ElMessage({
+              showClose: true,
+              message: '无权限访问！',
+              type: 'error',
+              center: true,
+              duration: 1000
+            })
+            router.replace('/managementLogin')
+          }
+          admin.id = result.data.id
+          admin.nickname = result.data.nickname
+          admin.avatar = result.data.avatar
+          admin.email = result.data.email
+          admin.sex = result.data.sex
+          admin.description = result.data.description
+        } else if (result.code === 401) {
+          ElMessage({
+            showClose: true,
+            message: '请先登录！',
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+          router.replace('/managementLogin')
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
     }
 
     // 点击菜单--首页
@@ -207,9 +250,36 @@ export default {
     }
 
     const router = useRouter()
-    const handleLogoutClick = () => {
-      console.log('退出啦')
-      router.push('/managementLogin')
+    const handleLogoutClick = async () => {
+      try {
+        const result = await post('user/logout')
+        if (result.code === 200) {
+          ElMessage({
+            showClose: true,
+            message: '退出成功！',
+            type: 'success',
+            center: true,
+            duration: 1000
+          })
+          router.push('/managementLogin')
+        } else {
+          ElMessage({
+            showClose: true,
+            message: result.msg,
+            type: 'error',
+            center: true,
+            duration: 1000
+          })
+        }
+      } catch (e) {
+        ElMessage({
+          showClose: true,
+          message: '发生错误',
+          type: 'error',
+          center: true,
+          duration: 1000
+        })
+      }
     }
 
     return {

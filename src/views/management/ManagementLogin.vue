@@ -9,7 +9,7 @@
         ref="loginFormRef"
         class="input__form"
       >
-        <el-form-item prop="email" label="邮箱" :label-width="80">
+        <el-form-item prop="email" label="邮箱" :label-width="50">
           <el-input type="email"
             placeholder="请输入邮箱"
             v-model="loginForm.email"
@@ -18,7 +18,7 @@
           >
           </el-input>
         </el-form-item>
-        <el-form-item prop="password" label="密码" :label-width="80">
+        <el-form-item prop="password" label="密码" :label-width="50">
           <el-input
             type="password"
             placeholder="请输入密码"
@@ -28,6 +28,9 @@
             show-password
           >
           </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="login(loginFormRef)" class="button">登录</el-button>
@@ -100,11 +103,13 @@ const useSubmitEffect = (loginForm) => {
           const formData = new FormData()
           formData.append('email', loginForm.email)
           formData.append('password', loginForm.password)
-          const result = await post('/user/login', formData)
+          formData.append('rememberMe', loginForm.rememberMe)
+          const result = await post('/admin/login', formData)
           if (result.code === 200) {
             ElMessage({
               showClose: true,
               message: '登录成功',
+              type: 'success',
               center: true,
               duration: 1000
             })
@@ -113,6 +118,14 @@ const useSubmitEffect = (loginForm) => {
             setTimeout(() => {
               router.push('/management')
             }, 1000)
+          } else {
+            ElMessage({
+              showClose: true,
+              message: result.msg,
+              type: 'error',
+              center: true,
+              duration: 1000
+            })
           }
         } catch (e) {
           ElMessage({
@@ -136,8 +149,7 @@ export default {
     const loginForm = reactive({
       email: '',
       password: '',
-      checkPassword: '',
-      code: ''
+      rememberMe: false
     })
 
     const { loginFormRef, rules } = useValidateEffect(loginForm)
@@ -172,6 +184,9 @@ export default {
     left: 50%;
     transform: translate(-50%, -50%);
   }
+  :deep(.el-card__body){
+    padding: 20px 30px;
+  }
   .card__title{
     margin-bottom: 30px;
     font-size: 20px;
@@ -192,6 +207,9 @@ export default {
     .send{
       margin-left: 8px;
     }
+  }
+  :deep(.el-checkbox){
+    margin-left: 50px;
   }
 
   // 取消elementUI输入框组件自带高度和阴影
@@ -245,11 +263,11 @@ export default {
 
   .button{
     width: 100%;
-    margin: 10px 0;
-    height: 44px;
-    line-height: 44px;
+    margin-top: 10px;
+    height: 35px;
+    line-height: 35px;
     border: none;
-    border-radius: 22px;
+    border-radius: 17px;
     color: rgba(255,255,255,0.8);
     font-size: 16px;
     font-weight: bold;
