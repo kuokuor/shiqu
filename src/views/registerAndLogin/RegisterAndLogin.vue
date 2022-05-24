@@ -307,7 +307,7 @@ const useSubmitEffect = (refresh, registerForm, loginForm) => {
           } else {
             ElMessage({
               showClose: true,
-              message: '注册失败',
+              message: result.msg,
               type: 'error',
               center: true,
               duration: 1000
@@ -350,7 +350,7 @@ const useSubmitEffect = (refresh, registerForm, loginForm) => {
           } else {
             ElMessage({
               showClose: true,
-              message: '登录失败',
+              message: result.msg,
               type: 'error',
               center: true,
               duration: 1000

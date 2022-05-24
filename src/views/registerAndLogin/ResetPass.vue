@@ -233,7 +233,7 @@ const useSubmitEffect = (resetForm) => {
           } else {
             ElMessage({
               showClose: true,
-              message: '密码重置失败',
+              message: result.msg,
               type: 'error',
               center: true,
               duration: 1000

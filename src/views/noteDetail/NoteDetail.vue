@@ -753,7 +753,8 @@ export default {
       }
       .wrapper{
         height: 100%;
-        flex: 1;
+        // flex: 1;
+        max-width: 2.3rem;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -761,18 +762,16 @@ export default {
         .nickname__wrapper{
           width: 100%;
           height: 0.3rem;
+          line-height: 0.3rem;
           text-align: left;
+          @include ellipsis;
           .nickname{
             display: inline-block;
-            max-width: 82%;
+            // max-width: 82%;
             line-height: .3rem;
             font-size: .17rem;
-            @include ellipsis;
           }
           .official__icon{
-            position: relative;
-            top: -0.1rem;
-            left: 0.05rem;
             font-size: .18rem;
             color: #ffb400;
           }

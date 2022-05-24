@@ -66,6 +66,7 @@ import { onMounted, ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { get, post } from '../../utils/request'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'EditInfo',
@@ -78,20 +79,23 @@ export default {
     // （持有者）用户信息
     const user = ref({})
 
+    const router = useRouter()
     // 获取持有者信息
     const getHolderInfo = async () => {
       try {
         const result = await get('/user/getHolderInfo')
         if (result.code === 200 && result.data) {
           user.value = result.data
-        } else {
+          getUploadToken()
+        } else if (result.code === 401) {
           ElMessage({
             showClose: true,
-            message: '发生错误',
+            message: '请先登录！',
             type: 'error',
             center: true,
             duration: 1000
           })
+          router.replace('/registerAndLogin')
         }
       } catch (e) {
         ElMessage({
@@ -136,7 +140,6 @@ export default {
     onMounted(() => {
       // 获取持有者信息
       getHolderInfo()
-      getUploadToken()
     })
 
     // 上传头像成功的操作
